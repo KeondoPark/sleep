@@ -1,0 +1,115 @@
+Namespace(data_ratio='1.0', include_type='SC,ST', model='0', num_epoch=30)
+--------------------Epoch 0--------------------
+Training loss: 0.605682, Training acc: 0.815
+Training time: 655.68 sec 
+--------------------Epoch 1--------------------
+Training loss: 0.464573, Training acc: 0.843
+Training time: 639.25 sec 
+--------------------Epoch 2--------------------
+Training loss: 0.423514, Training acc: 0.853
+Training time: 639.06 sec 
+--------------------Epoch 3--------------------
+Training loss: 0.401368, Training acc: 0.859
+Training time: 637.17 sec 
+--------------------Epoch 4--------------------
+Training loss: 0.382870, Training acc: 0.865
+Training time: 637.06 sec 
+--------------------Epoch 5--------------------
+Training loss: 0.370372, Training acc: 0.869
+Training time: 642.14 sec 
+--------------------Epoch 6--------------------
+Training loss: 0.357332, Training acc: 0.872
+Training time: 639.15 sec 
+--------------------Epoch 7--------------------
+Training loss: 0.351985, Training acc: 0.874
+Training time: 638.83 sec 
+--------------------Epoch 8--------------------
+Training loss: 0.344599, Training acc: 0.876
+Training time: 638.88 sec 
+--------------------Epoch 9--------------------
+Training loss: 0.338292, Training acc: 0.878
+Training time: 638.76 sec 
+test loss: 0.655480, test acc: 0.804
+Eval time: 120.23 sec
+--------------------Epoch 10--------------------
+Training loss: 0.370100, Training acc: 0.866
+Training time: 629.03 sec 
+--------------------Epoch 11--------------------
+Training loss: 0.351775, Training acc: 0.871
+Training time: 628.26 sec 
+--------------------Epoch 12--------------------
+Training loss: 0.345983, Training acc: 0.873
+Training time: 627.64 sec 
+--------------------Epoch 13--------------------
+Training loss: 0.341846, Training acc: 0.874
+Training time: 628.33 sec 
+--------------------Epoch 14--------------------
+Training loss: 0.339092, Training acc: 0.875
+Training time: 630.35 sec 
+test loss: 0.516116, test acc: 0.835
+Eval time: 108.94 sec
+--------------------Epoch 15--------------------
+Training loss: 0.336043, Training acc: 0.876
+Training time: 627.33 sec 
+--------------------Epoch 16--------------------
+Training loss: 0.333949, Training acc: 0.877
+Training time: 626.90 sec 
+--------------------Epoch 17--------------------
+Training loss: 0.332132, Training acc: 0.877
+Training time: 627.89 sec 
+--------------------Epoch 18--------------------
+Training loss: 0.330012, Training acc: 0.878
+Training time: 628.84 sec 
+--------------------Epoch 19--------------------
+Training loss: 0.328493, Training acc: 0.879
+Training time: 629.31 sec 
+test loss: 0.518781, test acc: 0.836
+Eval time: 109.08 sec
+--------------------Epoch 20--------------------
+Training loss: 0.335120, Training acc: 0.876
+Training time: 627.56 sec 
+--------------------Epoch 21--------------------
+Training loss: 0.331072, Training acc: 0.877
+Training time: 628.96 sec 
+--------------------Epoch 22--------------------
+Training loss: 0.330151, Training acc: 0.878
+Training time: 628.09 sec 
+--------------------Epoch 23--------------------
+Training loss: 0.329640, Training acc: 0.878
+Training time: 629.23 sec 
+--------------------Epoch 24--------------------
+Training loss: 0.329353, Training acc: 0.878
+Training time: 627.91 sec 
+test loss: 0.485953, test acc: 0.845
+Eval time: 110.25 sec
+--------------------Epoch 25--------------------
+Training loss: 0.328669, Training acc: 0.878
+Training time: 628.42 sec 
+--------------------Epoch 26--------------------
+Training loss: 0.328343, Training acc: 0.879
+Training time: 630.90 sec 
+--------------------Epoch 27--------------------
+Training loss: 0.328138, Training acc: 0.879
+Training time: 630.32 sec 
+--------------------Epoch 28--------------------
+Training loss: 0.327720, Training acc: 0.879
+Training time: 628.50 sec 
+--------------------Epoch 29--------------------
+Training loss: 0.327561, Training acc: 0.879
+Training time: 628.92 sec 
+test loss: 0.487760, test acc: 0.845
+Eval time: 110.06 sec
+--------------------Confusion Matrix--------------------
+0.942 0.021 0.008 0.002 0.016 0.010 
+0.162 0.284 0.328 0.007 0.218 0.001 
+0.008 0.070 0.796 0.049 0.076 0.000 
+0.010 0.022 0.353 0.596 0.019 0.000 
+0.102 0.132 0.174 0.003 0.586 0.004 
+0.333 0.000 0.000 0.333 0.333 0.000 
+--------------------Confusion Matrix Counts--------------------
+84497 1914 740 201 1458 925 
+925 1625 1877 38 1247 6 
+204 1736 19720 1222 1890 11 
+67 149 2432 4105 129 2 
+992 1288 1699 30 5721 37 
+3 0 0 3 3 0 

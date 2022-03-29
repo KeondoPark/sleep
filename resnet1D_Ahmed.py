@@ -173,6 +173,6 @@ def eegnet(eeg_length=3000, kernel_size=16, bias=False, maxnorm=4., **kwargs):
     x = Flatten()(x)
     x = Dense(6, activation='softmax', kernel_initializer=initializers.he_normal(seed=1),
               kernel_constraint=max_norm(400000000000.), use_bias=True)(x)
-    x = Model(EEG_input,x)
+    x = Model(EEG_input,x, name='resnet34')
     # tf.keras.backend.eval(x)
     return x

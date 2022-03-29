@@ -1,0 +1,7 @@
+Namespace(data_ratio='0.25', include_type='SC,ST', model='4', num_epoch=30)
+--------------------Epoch 0--------------------
+Namespace(data_ratio='0.25', include_type='SC,ST', model='4', num_epoch=30)
+--------------------Epoch 0--------------------
+Training loss: nan, Training acc: 0.635
+Training time: 77.34 sec 
+--------------------Epoch 1--------------------

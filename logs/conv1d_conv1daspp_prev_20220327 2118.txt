@@ -1,0 +1,1 @@
+Namespace(data_ratio='0.25', include_type='SC,ST', model=0, num_epoch='50')

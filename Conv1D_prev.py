@@ -25,39 +25,26 @@ np.random.seed(1)
 import nets
 from Data import datagen
 import importlib 
-import resnet1D_Ahmed
 importlib.reload(nets)  # Python 3.4+
 model_flag = int(FLAGS.model)
 if model_flag == 0:
-    model = resnet1D_Ahmed.eegnet()
-elif model_flag == 1:
-    model = nets.Conv1DAttention()
-elif model_flag == 2:
-    model = nets.Conv1DAttention2()
-elif model_flag == 3:
-    model = nets.Conv1DASPP()
-elif model_flag == 4:
-    model = nets.Conv1DASPP_1()
-elif model_flag == 5:
-    model = nets.Conv1DASPP_2()
-elif model_flag == 6:
-    model = nets.Conv1D_SPP()
+    model = model = nets.Conv1DASPP_prev()
 
-elif model_flag == 7:
-    model = nets.Conv1DASPP_3()
 
-x = np.random.random((1,3000,1))
+
+dim_HT1D = (3000,1)
+n_classes=6
+epochs = int(FLAGS.num_epoch)
+bs = 128
+PREV_CNT = 10
+BASE_LEARNING_RATE = 1e-3
+
+x = np.random.random((bs,3000,1))
 x = tf.convert_to_tensor(x)
 print(model(x))
 print(model.name)
 
 print(model.summary())
-
-dim_HT1D = (3000,1)
-n_classes=6
-epochs = int(FLAGS.num_epoch)
-bs = 64
-BASE_LEARNING_RATE = 1e-3
 
 PROCESSED_DATA_PATH = os.path.join('/home','aiot','data','origin_npy')
 save_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC_filtered')
@@ -75,22 +62,6 @@ def match_annotations_npy(dirname, filepath):
 
 list_files_SC = [os.path.join(save_signals_path_SC, f) for f in os.listdir(save_signals_path_SC) if f.endswith('.npy')]
 list_files_ST = [os.path.join(save_signals_path_ST, f) for f in os.listdir(save_signals_path_ST) if f.endswith('.npy')]
-
-'''
-def read_csv_to_list(filepath):
-    import csv
-    with open(filepath, newline='') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',')
-        list_filepath = [row[0] for row in spamreader]
-    return list_filepath
-
-SC_train = os.path.join('/home','aiot','data','origin_npy','SC_train.csv')
-SC_test = os.path.join('/home','aiot','data','origin_npy','SC_test.csv')
-list_files_train = read_csv_to_list(SC_train)
-list_files_test = read_csv_to_list(SC_test)
-list_files_train = [f + '.npy' for f in list_files_train]
-list_files_test = [f + '.npy' for f in list_files_test]
-'''
 
 train_test_split = 0.7
 split_cnt_SC = int(train_test_split * len(list_files_SC))
@@ -131,27 +102,30 @@ if include_ST:
         ann_file = match_annotations_npy(save_annotations_path_ST, f)
         list_ann_files_test.append(os.path.join(save_annotations_path_ST, ann_file[0]))
 
-train_generator = datagen.DataGenerator(list_files_train, list_ann_files_train, 
-                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=False)
-test_generator = datagen.DataGenerator(list_files_test, list_ann_files_test, 
-                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=False)
+train_generator = datagen.DataGenerator2(list_files_train, list_ann_files_train, 
+                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=True, prev_cnt=PREV_CNT)
+test_generator = datagen.DataGenerator2(list_files_test, list_ann_files_test, 
+                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=False, prev_cnt=PREV_CNT)
 # Calculate class weight
 # Tested loss with class weight, but doesn't improve the accuracy
 
 from collections import defaultdict
 cnt_class = defaultdict(int)
-for x, y in train_generator:
-    unique, counts = np.unique(y, return_counts=True)
+for x, y, batch_idx in train_generator:
+    y1 = y
+    if batch_idx > 0:
+        y1 = y[PREV_CNT:]
+    unique, counts = np.unique(y1, return_counts=True)
     for i, cnt in zip(unique, counts):
         cnt_class[i] += cnt
+
 cnt_class_np = np.zeros((n_classes,))
 for i in range(n_classes):
     cnt_class_np[i] = cnt_class[i]
-class_weight = 0.1 * np.ones((n_classes,))
-class_weight[:n_classes-1] = np.sqrt(sum(cnt_class_np[:n_classes-1])/(n_classes * cnt_class_np[:n_classes-1]))
-print("Count class", cnt_class_np)
-print("Class weight", class_weight)
 
+class_weight = 0.1 * np.ones((n_classes,))
+class_weight[:n_classes-1] = sum(cnt_class_np[:n_classes-1])/(n_classes * cnt_class_np[:n_classes-1])
+print("Class weight", class_weight)
 
 def get_current_lr(epoch):
     lr = BASE_LEARNING_RATE
@@ -217,8 +191,8 @@ def log_string(out_str):
     print(out_str)
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-#loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
-loss_fn = weighted_categorical_crossentropy(weights=class_weight)
+loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+#loss_fn = weighted_categorical_crossentropy(weights=class_weight)
 #loss_fn = get_focal_loss_sigmoid_on_multi_classification
 ckpt = tf.train.Checkpoint(step=tf.Variable(1), optimizer=optimizer, net=model)
 manager = tf.train.CheckpointManager(ckpt, './ckpt_' + model.name, max_to_keep=1)
@@ -247,19 +221,15 @@ for e in range(start_epoch, epochs):
     log_string('-'*20 + 'Epoch ' + str(e) + '-'*20)
     adjust_learning_rate(optimizer, e)
     start = time.time()
-    for idx, (x, y) in enumerate(train_generator):   
-        '''
-        y_onehot = tf.one_hot(y, depth=n_classes)
-        with tf.GradientTape() as tape:
-            y_pred = model(x, training=True)
-            #loss = loss_fn(y_onehot, y_pred)
-            loss = loss_fn(y, y_pred)
-        '''
+    for idx, (x, y, batch_idx) in enumerate(train_generator):   
         loss, y_pred = train_step(x, y)
 
-        total_cnt += y_pred.shape[0]
+        total_cnt += y_pred.shape[0] - PREV_CNT
         y_pred_cls = tf.math.argmax(y_pred, axis=-1)
-        correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls, y), tf.float32))
+        correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[PREV_CNT:], y[PREV_CNT:]), tf.float32))
+        if batch_idx == 0:
+            correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[:PREV_CNT], y[:PREV_CNT]), tf.float32))
+            total_cnt += PREV_CNT
         total_loss += loss * y_pred.shape[0]
         if (idx + 1) % 10 == 0 or idx+1 == len(train_generator):
             print("[%d / %d] Training loss: %.6f, Training acc: %.3f"%
@@ -272,20 +242,22 @@ for e in range(start_epoch, epochs):
     log_string("Training time: %.2f sec "%(time.time() - start))
     ckpt.step.assign_add(1)
     
-    if e+1 >= 10 and (e+1) % 5 == 0:
+    if e==0 or (e+1 >= 10 and (e+1) % 5 == 0):
         start = time.time()
         
         correct, total_cnt, total_loss = 0.0, 0.0, 0.0
-        for idx, (x, y) in enumerate(test_generator):
+        for idx, (x, y, batch_idx) in enumerate(test_generator):
             #y_pred = model(x, training=False)
             y_pred = test_step(x, y)
             y_pred_cls = tf.math.argmax(y_pred, axis=-1)
-            correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls, y), tf.float32))
-            total_cnt += y_pred.shape[0]
-            y = tf.cast(y, dtype=tf.int32)
-            y_onehot = tf.one_hot(y, depth=n_classes)
-            total_loss += loss_fn(y, y_pred).numpy() * y_pred.shape[0]
-            #total_loss += loss_fn(y_onehot, y_pred).numpy() * y_pred.shape[0]
+            correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[PREV_CNT:], y[PREV_CNT:]), tf.float32))
+            total_cnt += y_pred.shape[0] - PREV_CNT
+            if batch_idx == 0:
+                correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[:PREV_CNT], y[:PREV_CNT]), tf.float32))
+                total_cnt += PREV_CNT
+
+            y = tf.cast(y, dtype=tf.int32)            
+            total_loss += loss_fn(y, y_pred).numpy() * y_pred.shape[0]            
                 
             test_acc = correct / total_cnt
             test_loss = total_loss / total_cnt
@@ -305,15 +277,22 @@ for e in range(start_epoch, epochs):
 
 correct, total_cnt, total_loss = 0.0, 0.0, 0.0
 confusion_matrix = np.zeros((n_classes,n_classes))
-for idx, (x, y) in enumerate(test_generator):
+for idx, (x, y, batch_idx) in enumerate(test_generator):
     y_pred = model(x, training=False)
     y_pred_cls = tf.math.argmax(y_pred, axis=-1)
-    correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls, y), tf.float32))
-    total_cnt += y_pred.shape[0]
+    #correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[:PREV_CNT], y[:PREV_CNT]), tf.float32))
+    #total_cnt += y_pred.shape[0] - PREV_CNT
+    #if batch_idx == 0:
+    #    correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[:PREV_CNT], y[:PREV_CNT]), tf.float32))
+    #    total_cnt += PREV_CNT
+
     y = tf.cast(y, dtype=tf.int32)    
     for i in range(n_classes):
         for j in range(n_classes):
-            confusion_matrix[i,j] += np.sum((y_pred_cls.numpy()==i) * (y.numpy()==j))
+            if batch_idx == 0:
+                confusion_matrix[i,j] += np.sum((y_pred_cls.numpy()==i) * (y.numpy()==j))
+            else:
+                confusion_matrix[i,j] += np.sum((y_pred_cls[PREV_CNT:].numpy()==i) * (y[PREV_CNT:].numpy()==j))
 
 
 log_string('-'*20 + 'Confusion Matrix' + '-'*20)

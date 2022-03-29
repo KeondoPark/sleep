@@ -7,8 +7,83 @@ import random
 import shutil
 from  tqdm import tqdm
 
+
+'''
+Parameters
+- 1 epoch = 30 seconds
+- sample frequency = 100 Hz
+'''
+EPOCH_SIZE = 30
+FS = 100
+
 BASE_PATH = '/home/aiot/data/physionet.org/files/sleep-edfx/1.0.0/'
-path = os.path.join(BASE_PATH, 'sleep-telemetry')
+# EDF dataset path
+src_path_ST = os.path.join(BASE_PATH, 'sleep-telemetry')
+src_path_SC = os.path.join(BASE_PATH, 'sleep-cassette')
+
+'''
+File path
+'''
+data_path = os.path.join('/home','aiot','data')
+PROCESSED_DATA_PATH = os.path.join(data_path,'origin_npy')
+save_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC')
+save_annotations_path_SC = os.path.join(PROCESSED_DATA_PATH,'annotations_SC')
+save_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST')
+save_annotations_path_ST = os.path.join(PROCESSED_DATA_PATH,'annotations_ST')
+
+'''
+Make directory
+*exist_ok = True : Make directory if there isn't directory in the path
+'''
+os.makedirs(PROCESSED_DATA_PATH, exist_ok=True)
+os.makedirs(save_signals_path_SC, exist_ok=True)
+os.makedirs(save_annotations_path_SC, exist_ok=True)
+os.makedirs(save_signals_path_ST, exist_ok=True)
+os.makedirs(save_annotations_path_ST, exist_ok=True)
+
+# Filtering functions: Butterworth bandpass filter
+# Notch filter(band stop filter)
+from scipy import signal
+from scipy.signal import butter, lfilter, sosfilt
+
+def butter_bandpass(lowcut, highcut, fs, order=8):
+    #nyq = 0.5 * fs
+    #low = lowcut / nyq
+    #high = highcut / nyq
+    #b, a = butter(order, [low, high], btype='band')
+    low = lowcut
+    high = highcut
+    sos  = butter(order, [low, high], btype='band', fs=fs, output='sos', analog=False)
+    return sos 
+
+def butter_bandpass_filter(data, lowcut, highcut, fs, order=8):
+    sos  = butter_bandpass(lowcut, highcut, fs, order=order)
+    #y = lfilter(b, a, data)
+    y = sosfilt(sos, data)
+    return y
+
+def butter_bandpass_orig(lowcut, highcut, fs, order=8):
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    b, a = butter(order, [low, high], btype='band')
+    
+    return b, a
+
+def butter_bandpass_filter_orig(data, lowcut, highcut, fs, order=8):
+    b,a  = butter_bandpass_orig(lowcut, highcut, fs, order=order)
+    y = lfilter(b, a, data)    
+    return y
+
+def notch_filter(data, f0, Q, fs):
+    b, a = signal.iirnotch(f0, Q, fs)
+    y = lfilter(b, a, data)
+    return y
+
+def notch_filter(data, f0, Q, fs):
+    b, a = signal.iirnotch(f0, Q, fs)
+    y = lfilter(b, a, data)
+    return y
 
 def search_signals_edf(dirname): 
     '''
@@ -21,7 +96,6 @@ def search_signals_edf(dirname):
     
     return filenames
 
-
 def search_annotations_edf(dirname): 
     '''
     find annotations files (Hypnogram.edf)
@@ -32,7 +106,6 @@ def search_annotations_edf(dirname):
     filenames = [file for file in filenames if file.endswith('Hypnogram.edf')]
     
     return filenames
-
 
 def match_annotations(dirname, filename): 
     '''
@@ -47,36 +120,6 @@ def match_annotations(dirname, filename):
     filename = [file for file in file_list if match_filename in file if file.endswith("Hypnogram.edf")]
 
     return filename
-
-'''
-Parameters
-- 1 epoch = 30 seconds
-- sample frequency = 100 Hz
-'''
-EPOCH_SIZE = 30
-FS = 100
-
-'''
-File path
-'''
-data_path = os.path.join('/home','aiot','data')
-PROCESSED_DATA_PATH = os.path.join(data_path,'origin_npy')
-save_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC')
-save_annotations_path_SC = os.path.join(PROCESSED_DATA_PATH,'annotations_SC')
-save_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST')
-save_annotations_path_ST = os.path.join(PROCESSED_DATA_PATH,'annotations_ST')
-# Trime the first and last epoch(30 seconds)
-#save_annotations_path2 = os.path.join(PROCESSED_DATA_PATH,'annotations2')
-
-'''
-Make directory
-*exist_ok = True : Make directory if there isn't directory in the path
-'''
-os.makedirs(PROCESSED_DATA_PATH, exist_ok=True)
-os.makedirs(save_signals_path_SC, exist_ok=True)
-os.makedirs(save_annotations_path_SC, exist_ok=True)
-os.makedirs(save_signals_path_ST, exist_ok=True)
-os.makedirs(save_annotations_path_ST, exist_ok=True)
 
 def preprocess_signal(src_path, edf_list, output_signal_path, output_ann_path, epoch_size=30, sample_rate=100):
 
@@ -166,25 +209,6 @@ def preprocess_signal(src_path, edf_list, output_signal_path, output_ann_path, e
         else:
             print("%s file''s signal & annotations start time is different"%signal_path.split('/')[-1])
 
-
-
-# EDF dataset path
-src_path_ST = os.path.join(BASE_PATH, 'sleep-telemetry')
-src_path_SC = os.path.join(BASE_PATH, 'sleep-cassette')
-
-#Extract signals EDF files
-signals_edf_list_ST = search_signals_edf(src_path_ST)
-signals_edf_list_SC = search_signals_edf(src_path_SC)
-
-
-# Do preprocessing
-#preprocess_signal(src_path=src_path_ST, edf_list=signals_edf_list_ST, \
-#    output_signal_path=save_signals_path_ST, output_ann_path=save_annotations_path_ST, epoch_size=EPOCH_SIZE, sample_rate=FS)
-
-#preprocess_signal(src_path=src_path_SC, edf_list=signals_edf_list_SC, \
-#    output_signal_path=save_signals_path_SC, output_ann_path=save_annotations_path_SC, epoch_size=EPOCH_SIZE, sample_rate=FS)
-
-
 def search_signals_npy(dirname):
     filenames = os.listdir(dirname)
     filenames = [file for file in filenames if file.endswith('.npy')]
@@ -197,36 +221,6 @@ def match_annotations_npy(dirname, filename):
     filenames = [file for file in file_list if search_filename in file if file.endswith('.npy')]
 
     return filenames
-
-npy_signals_ST = search_signals_npy(save_signals_path_ST)
-npy_signals_SC = search_signals_npy(save_signals_path_SC)
-
-# Filtering functions: Butterworth bandpass filter
-# Notch filter(band stop filter)
-from scipy import signal
-from scipy.signal import butter, lfilter
-
-def butter_bandpass(lowcut, highcut, fs, order=5):
-    nyq = 0.5 * fs
-    low = lowcut / nyq
-    high = highcut / nyq
-    b, a = butter(order, [low, high], btype='band')
-    return b, a
-
-def butter_bandpass_filter(data, lowcut, highcut, fs, order=8):
-    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
-    y = lfilter(b, a, data)
-    return y
-
-def notch_filter(data, f0, Q, fs):
-    b, a = signal.iirnotch(f0, Q, fs)
-    y = lfilter(b, a, data)
-    return y
-
-save_filtered_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST_filtered')
-save_filtered_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC_filtered')
-os.makedirs(save_filtered_signals_path_ST, exist_ok=True)
-os.makedirs(save_filtered_signals_path_SC, exist_ok=True)
 
 def filter_signal(file_list, in_folder, output_folder):
     for signal_file in tqdm(file_list):
@@ -263,10 +257,6 @@ def filter_signal(file_list, in_folder, output_folder):
 
         np.save(os.path.join(output_folder, signal_file), filtered_signal)
 
-
-# Do filtering
-#filter_signal(npy_signals_SC, save_signals_path_SC, save_filtered_signals_path_SC)
-#filter_signal(npy_signals_ST, save_signals_path_ST, save_filtered_signals_path_ST)
 
 from scipy import signal, ndimage
 import emd
@@ -339,34 +329,106 @@ def ht_transform(data, visualize=False):
     return hht_scaled, hht_f, IP, IF, IA
 
 
-HT2D_SC_path = os.path.join(PROCESSED_DATA_PATH, 'HT2D_SC')
-os.makedirs(HT2D_SC_path, exist_ok=True)
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--preprocess_edf', action='store_true', help='Preprocess edf files into npy files')
+parser.add_argument('--filter', action='store_true', help='Filter signals - notch and butterworth')
+parser.add_argument('--ht', action='store_true', help='Do Hilbert-Huang transform')
+parser.add_argument('--include_type', default='SC', help='Processing for SC or ST')
+FLAGS = parser.parse_args()
 
-def read_csv_to_list(filepath):
-    import csv
-    with open(filepath, newline='') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',')
-        list_filepath = [row[0] for row in spamreader]
-    return list_filepath
 
-SC_train = os.path.join('/home','aiot','data','origin_npy','SC_train.csv')
-SC_test = os.path.join('/home','aiot','data','origin_npy','SC_test.csv')
+if __name__ == '__main__':
+    SC_ST = [x for x in FLAGS.include_type.split(',')]
+    include_SC = 'SC' in SC_ST
+    include_ST = 'ST' in SC_ST
+    if not include_SC and not include_ST:
+        print("Either ST or SC should be included in 'include_type' argument")
+        exit(-1)
 
-list_files_train = read_csv_to_list(SC_train)
-list_files_test = read_csv_to_list(SC_test)
+    if FLAGS.preprocess_edf:
+        if include_ST:
+            #Extract signals EDF files
+            signals_edf_list_ST = search_signals_edf(src_path_ST)        
 
-list_files_train = [f + '.npy' for f in list_files_train]
-list_files_test = [f + '.npy' for f in list_files_test]
+            # Do preprocessing
+            preprocess_signal(src_path=src_path_ST, edf_list=signals_edf_list_ST, \
+                output_signal_path=save_signals_path_ST, output_ann_path=save_annotations_path_ST, epoch_size=EPOCH_SIZE, sample_rate=FS)
 
-npy_signals = list_files_train + list_files_test
+        if include_SC:
+            signals_edf_list_SC = search_signals_edf(src_path_SC)
+            preprocess_signal(src_path=src_path_SC, edf_list=signals_edf_list_SC, \
+                output_signal_path=save_signals_path_SC, output_ann_path=save_annotations_path_SC, epoch_size=EPOCH_SIZE, sample_rate=FS)
 
-for signal_file in tqdm(npy_signals):
-    signal_data = np.load(os.path.join(save_signals_path_SC, signal_file))
-    ht_signal_arr = []
-    for signal_epoch in signal_data:
-        ht_signal_data, ht_signal_data_f, IP, IF, IA = ht_transform(signal_epoch)     
-        ht_signal_data = ht_signal_data.transpose()
-        ht_signal_arr.append(ht_signal_data)
-    ht_signal_arr = np.array(ht_signal_arr)
-    np.save(os.path.join(HT2D_SC_path, (signal_file.split('.')[0] + '_HT2D')), ht_signal_arr)
+    if FLAGS.filter:  
+        if include_ST:      
+            npy_signals_ST = search_signals_npy(save_signals_path_ST)
+            save_filtered_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST_filtered')
+            os.makedirs(save_filtered_signals_path_ST, exist_ok=True)
+            # Do filtering
+            filter_signal(npy_signals_ST, save_signals_path_ST, save_filtered_signals_path_ST)
+        if include_SC: 
+            npy_signals_SC = search_signals_npy(save_signals_path_SC)
+            save_filtered_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC_filtered')        
+            os.makedirs(save_filtered_signals_path_SC, exist_ok=True)
+
+            # Do filtering
+            filter_signal(npy_signals_SC, save_signals_path_SC, save_filtered_signals_path_SC)
+
+    if FLAGS.ht:
+        if include_SC:   
+            HT2D_SC_path = os.path.join(PROCESSED_DATA_PATH, 'HT2D_SC')
+            os.makedirs(HT2D_SC_path, exist_ok=True)
+
+            """
+            def read_csv_to_list(filepath):
+                import csv
+                with open(filepath, newline='') as csvfile:
+                    spamreader = csv.reader(csvfile, delimiter=',')
+                    list_filepath = [row[0] for row in spamreader]
+                return list_filepath
+
+            SC_train = os.path.join('/home','aiot','data','origin_npy','SC_train.csv')
+            SC_test = os.path.join('/home','aiot','data','origin_npy','SC_test.csv')
+
+            list_files_train = read_csv_to_list(SC_train)
+            list_files_test = read_csv_to_list(SC_test)
+
+            list_files_train = [f + '.npy' for f in list_files_train]
+            list_files_test = [f + '.npy' for f in list_files_test]
+
+            npy_signals = list_files_train + list_files_test
+            """
+            npy_signals = search_signals_npy(save_signals_path_SC)
+
+            for signal_file in tqdm(npy_signals):
+                signal_data = np.load(os.path.join(save_signals_path_SC, signal_file))
+                ht_signal_arr = []
+                for signal_epoch in signal_data:
+                    ht_signal_data, ht_signal_data_f, IP, IF, IA = ht_transform(signal_epoch)     
+                    ht_signal_data = ht_signal_data.transpose()
+                    ht_signal_arr.append(ht_signal_data)
+                ht_signal_arr = np.array(ht_signal_arr)
+                np.save(os.path.join(HT2D_SC_path, (signal_file.split('.')[0] + '_HT2D')), ht_signal_arr)
+
+        if include_ST:  
+
+            HT2D_ST_path = os.path.join(PROCESSED_DATA_PATH, 'HT2D_ST')
+            os.makedirs(HT2D_ST_path, exist_ok=True)
+
+            npy_signals_ST = search_signals_npy(save_signals_path_ST)            
+
+            for signal_file in tqdm(npy_signals_ST):
+                signal_data = np.load(os.path.join(save_signals_path_ST, signal_file))
+                ht_signal_arr = []
+                for signal_epoch in signal_data:
+                    ht_signal_data, ht_signal_data_f, IP, IF, IA = ht_transform(signal_epoch)     
+                    ht_signal_data = ht_signal_data.transpose()
+                    ht_signal_arr.append(ht_signal_data)
+                ht_signal_arr = np.array(ht_signal_arr)
+                np.save(os.path.join(HT2D_ST_path, (signal_file.split('.')[0] + '_HT2D')), ht_signal_arr)
+
+
+        
+
     

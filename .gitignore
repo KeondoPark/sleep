@@ -2,3 +2,5 @@ ckpt*
 ckpt_*
 .ipynb_checkpoints
 __pycache__
+slurm*
+logs\*

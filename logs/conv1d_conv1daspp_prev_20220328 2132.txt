@@ -1,0 +1,49 @@
+Namespace(data_ratio='0.25', include_type='SC,ST', model=0, num_epoch='10')
+--------------------Epoch 0--------------------
+Training loss: 3.058512, Training acc: 0.625
+Training time: 134.00 sec 
+test loss: 2.701477, test acc: 0.475
+Eval time: 101.76 sec
+--------------------Epoch 1--------------------
+Training loss: 1.141255, Training acc: 0.675
+Training time: 130.53 sec 
+--------------------Epoch 2--------------------
+Training loss: 1.065977, Training acc: 0.703
+Training time: 126.01 sec 
+--------------------Epoch 3--------------------
+Training loss: 0.755015, Training acc: 0.776
+Training time: 122.63 sec 
+--------------------Epoch 4--------------------
+Training loss: 0.673661, Training acc: 0.801
+Training time: 120.60 sec 
+--------------------Epoch 5--------------------
+Training loss: 0.669339, Training acc: 0.798
+Training time: 123.16 sec 
+--------------------Epoch 6--------------------
+Training loss: 1.041688, Training acc: 0.688
+Training time: 122.79 sec 
+--------------------Epoch 7--------------------
+Training loss: 0.665503, Training acc: 0.795
+Training time: 120.19 sec 
+--------------------Epoch 8--------------------
+Training loss: 0.533778, Training acc: 0.829
+Training time: 126.38 sec 
+--------------------Epoch 9--------------------
+Training loss: 0.511031, Training acc: 0.837
+Training time: 122.47 sec 
+test loss: 0.990498, test acc: 0.787
+Eval time: 104.16 sec
+--------------------Confusion Matrix--------------------
+0.841 0.045 0.042 0.008 0.056 0.009 
+0.426 0.226 0.262 0.010 0.072 0.004 
+0.016 0.053 0.649 0.142 0.137 0.004 
+0.000 0.000 0.750 0.000 0.250 0.000 
+nan nan nan nan nan nan 
+0.545 0.182 0.091 0.091 0.091 0.000 
+--------------------Confusion Matrix Counts--------------------
+86733 4625 4287 812 5738 887 
+670 355 412 15 113 7 
+529 1778 21908 4787 4636 135 
+0 0 3 0 1 0 
+0 0 0 0 0 0 
+6 2 1 1 1 0 
