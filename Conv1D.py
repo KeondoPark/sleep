@@ -132,11 +132,12 @@ if include_ST:
         list_ann_files_test.append(os.path.join(save_annotations_path_ST, ann_file[0]))
 
 train_generator = datagen.DataGenerator(list_files_train, list_ann_files_train, 
-                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=False)
+                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=True, balanced_sampling=True)
 test_generator = datagen.DataGenerator(list_files_test, list_ann_files_test, 
-                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=False)
+                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=False, balanced_sampling=False)
 # Calculate class weight
 # Tested loss with class weight, but doesn't improve the accuracy
+print(train_generator.list_cnt)
 
 from collections import defaultdict
 cnt_class = defaultdict(int)
@@ -157,6 +158,7 @@ def get_current_lr(epoch):
     lr = BASE_LEARNING_RATE
     for _ in range(epoch // 10):
         lr *= 0.1
+    lr = min(lr, 1e-6)
     return lr
 
 def adjust_learning_rate(optimizer, epoch):
@@ -217,8 +219,8 @@ def log_string(out_str):
     print(out_str)
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-#loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
-loss_fn = weighted_categorical_crossentropy(weights=class_weight)
+loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+#loss_fn = weighted_categorical_crossentropy(weights=class_weight)
 #loss_fn = get_focal_loss_sigmoid_on_multi_classification
 ckpt = tf.train.Checkpoint(step=tf.Variable(1), optimizer=optimizer, net=model)
 manager = tf.train.CheckpointManager(ckpt, './ckpt_' + model.name, max_to_keep=1)
@@ -272,7 +274,7 @@ for e in range(start_epoch, epochs):
     log_string("Training time: %.2f sec "%(time.time() - start))
     ckpt.step.assign_add(1)
     
-    if e+1 >= 10 and (e+1) % 5 == 0:
+    if (e+1 >= 10 and (e+1) % 5 == 0) or e == 0:
         start = time.time()
         
         correct, total_cnt, total_loss = 0.0, 0.0, 0.0

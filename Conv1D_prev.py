@@ -22,16 +22,6 @@ FLAGS = parser.parse_args()
 
 np.random.seed(1)
 
-import nets
-from Data import datagen
-import importlib 
-importlib.reload(nets)  # Python 3.4+
-model_flag = int(FLAGS.model)
-if model_flag == 0:
-    model = model = nets.Conv1DASPP_prev()
-
-
-
 dim_HT1D = (3000,1)
 n_classes=6
 epochs = int(FLAGS.num_epoch)
@@ -39,18 +29,36 @@ bs = 128
 PREV_CNT = 10
 BASE_LEARNING_RATE = 1e-3
 
+import nets
+from Data import datagen
+import importlib 
+importlib.reload(nets)  # Python 3.4+
+model_flag = int(FLAGS.model)
+if model_flag == 0:
+    model = nets.Conv1DASPP_single()
+    model2 = nets.Conv1DASPP_multi(batch_size=bs, prev_cnt=PREV_CNT)
+
+
 x = np.random.random((bs,3000,1))
 x = tf.convert_to_tensor(x)
 print(model(x))
+print(model.aspp(x))
+print(model2(x))
 print(model.name)
-
 print(model.summary())
+print(model2.name)
+print(model2.summary())
 
 PROCESSED_DATA_PATH = os.path.join('/home','aiot','data','origin_npy')
 save_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC_filtered')
 save_annotations_path_SC = os.path.join(PROCESSED_DATA_PATH,'annotations_SC')
 save_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST_filtered')
 save_annotations_path_ST = os.path.join(PROCESSED_DATA_PATH,'annotations_ST')
+
+save_signals_path_SC_seq = os.path.join(PROCESSED_DATA_PATH,'signals_SC_seq')
+save_annotations_path_SC_seq = os.path.join(PROCESSED_DATA_PATH,'annotations_SC_seq')
+save_signals_path_ST_seq = os.path.join(PROCESSED_DATA_PATH,'signals_ST_seq')
+save_annotations_path_ST_seq = os.path.join(PROCESSED_DATA_PATH,'annotations_ST_seq')
 
 def match_annotations_npy(dirname, filepath):
     filename = os.path.basename(filepath)
@@ -63,6 +71,9 @@ def match_annotations_npy(dirname, filepath):
 list_files_SC = [os.path.join(save_signals_path_SC, f) for f in os.listdir(save_signals_path_SC) if f.endswith('.npy')]
 list_files_ST = [os.path.join(save_signals_path_ST, f) for f in os.listdir(save_signals_path_ST) if f.endswith('.npy')]
 
+list_files_SC_seq = [os.path.join(save_signals_path_SC_seq, f) for f in os.listdir(save_signals_path_SC_seq) if f.endswith('.npy')]
+list_files_ST_seq = [os.path.join(save_signals_path_ST_seq, f) for f in os.listdir(save_signals_path_ST_seq) if f.endswith('.npy')]
+
 train_test_split = 0.7
 split_cnt_SC = int(train_test_split * len(list_files_SC))
 split_cnt_ST = int(train_test_split * len(list_files_ST))
@@ -74,8 +85,14 @@ include_ST = 'ST' in SC_ST
 list_files_train = []
 list_files_test = []
 
+list_seq_files_train = []
+list_seq_files_test = []
+
 list_ann_files_train = []
 list_ann_files_test = []
+
+list_ann_seq_files_train = []
+list_ann_seq_files_test = []
 
 if include_SC:
     list_files_SC_train = np.random.choice(list_files_SC[:split_cnt_SC], int(float(FLAGS.data_ratio) * split_cnt_SC), replace=False)
@@ -102,20 +119,25 @@ if include_ST:
         ann_file = match_annotations_npy(save_annotations_path_ST, f)
         list_ann_files_test.append(os.path.join(save_annotations_path_ST, ann_file[0]))
 
-train_generator = datagen.DataGenerator2(list_files_train, list_ann_files_train, 
-                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=True, prev_cnt=PREV_CNT)
-test_generator = datagen.DataGenerator2(list_files_test, list_ann_files_test, 
-                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=False, prev_cnt=PREV_CNT)
+# Generator for training the model predicting from single epoch
+train_generator = datagen.DataGenerator(list_files_train, list_ann_files_train, 
+                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=True)
+test_generator = datagen.DataGenerator(list_files_test, list_ann_files_test, 
+                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=False)
+
+
+# Generator for training the model predicting from 10 + 1 epochs
+#train_generator2 = datagen.DataGenerator2(list_files_train, list_ann_files_train, 
+#                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=True, prev_cnt=PREV_CNT)
+#test_generator2 = datagen.DataGenerator2(list_files_test, list_ann_files_test, 
+#                          batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=False, prev_cnt=PREV_CNT)
+
 # Calculate class weight
 # Tested loss with class weight, but doesn't improve the accuracy
-
 from collections import defaultdict
 cnt_class = defaultdict(int)
-for x, y, batch_idx in train_generator:
-    y1 = y
-    if batch_idx > 0:
-        y1 = y[PREV_CNT:]
-    unique, counts = np.unique(y1, return_counts=True)
+for x, y in train_generator:    
+    unique, counts = np.unique(y, return_counts=True)
     for i, cnt in zip(unique, counts):
         cnt_class[i] += cnt
 
@@ -197,10 +219,13 @@ loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 ckpt = tf.train.Checkpoint(step=tf.Variable(1), optimizer=optimizer, net=model)
 manager = tf.train.CheckpointManager(ckpt, './ckpt_' + model.name, max_to_keep=1)
 start_epoch = 0
-#if manager.latest_checkpoint:
-#    ckpt.restore(manager.latest_checkpoint)
-#    start_epoch = ckpt.step.numpy()-1
 best_test_acc = 0.0
+'''
+if manager.latest_checkpoint:
+    ckpt.restore(manager.latest_checkpoint)
+    start_epoch = ckpt.step.numpy()-1
+'''
+
 
 @tf.function
 def train_step(x, y):
@@ -216,20 +241,19 @@ def test_step(x, y):
     y_pred = model(x, training=False)
     return y_pred
 
+
+log_string('='*20 + 'Training single epoch model' + '='*20)
 for e in range(start_epoch, epochs):
     correct, total_cnt, total_loss = 0.0, 0.0, 0.0
     log_string('-'*20 + 'Epoch ' + str(e) + '-'*20)
     adjust_learning_rate(optimizer, e)
     start = time.time()
-    for idx, (x, y, batch_idx) in enumerate(train_generator):   
+    for idx, (x, y) in enumerate(train_generator):   
         loss, y_pred = train_step(x, y)
 
-        total_cnt += y_pred.shape[0] - PREV_CNT
+        total_cnt += y_pred.shape[0]
         y_pred_cls = tf.math.argmax(y_pred, axis=-1)
-        correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[PREV_CNT:], y[PREV_CNT:]), tf.float32))
-        if batch_idx == 0:
-            correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[:PREV_CNT], y[:PREV_CNT]), tf.float32))
-            total_cnt += PREV_CNT
+        correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls, y), tf.float32))
         total_loss += loss * y_pred.shape[0]
         if (idx + 1) % 10 == 0 or idx+1 == len(train_generator):
             print("[%d / %d] Training loss: %.6f, Training acc: %.3f"%
@@ -246,15 +270,12 @@ for e in range(start_epoch, epochs):
         start = time.time()
         
         correct, total_cnt, total_loss = 0.0, 0.0, 0.0
-        for idx, (x, y, batch_idx) in enumerate(test_generator):
+        for idx, (x, y) in enumerate(test_generator):
             #y_pred = model(x, training=False)
             y_pred = test_step(x, y)
             y_pred_cls = tf.math.argmax(y_pred, axis=-1)
-            correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[PREV_CNT:], y[PREV_CNT:]), tf.float32))
-            total_cnt += y_pred.shape[0] - PREV_CNT
-            if batch_idx == 0:
-                correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[:PREV_CNT], y[:PREV_CNT]), tf.float32))
-                total_cnt += PREV_CNT
+            correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls, y), tf.float32))
+            total_cnt += y_pred.shape[0]            
 
             y = tf.cast(y, dtype=tf.int32)            
             total_loss += loss_fn(y, y_pred).numpy() * y_pred.shape[0]            
@@ -274,17 +295,120 @@ for e in range(start_epoch, epochs):
             save_path = manager.save()
             print("Saved checkpoint for step {}: {}".format(int(ckpt.step), save_path))   
 
+correct, total_cnt, total_loss = 0.0, 0.0, 0.0
+confusion_matrix = np.zeros((n_classes,n_classes))
+for idx, (x, y) in enumerate(test_generator):
+    y_pred = model(x, training=False)
+    y_pred_cls = tf.math.argmax(y_pred, axis=-1)
+
+    y = tf.cast(y, dtype=tf.int32)    
+    for i in range(n_classes):
+        for j in range(n_classes):
+            confusion_matrix[i,j] += np.sum((y_pred_cls.numpy()==i) * (y.numpy()==j))            
+
+
+log_string('-'*20 + 'Confusion Matrix' + '-'*20)
+for i in range(n_classes):
+    print_ln = ""
+    for j in range(n_classes):
+        print_ln += "%.3f "%(confusion_matrix[i,j] / np.sum(confusion_matrix[i]))
+    log_string(print_ln)
+
+log_string('-'*20 + 'Confusion Matrix Counts' + '-'*20)
+for i in range(n_classes):
+    print_ln = ""
+    for j in range(n_classes):
+        print_ln += "%d "%(confusion_matrix[i,j])
+    log_string(print_ln)
+
+
+log_string('='*20 + 'Training multi epoch model' + '='*20)
+
+model2.aspp.set_weights(model.aspp.get_weights())
+model2.aspp.trainable=False
+ckpt2 = tf.train.Checkpoint(step=tf.Variable(1), optimizer=optimizer, net=model2)
+manager2 = tf.train.CheckpointManager(ckpt, './ckpt_' + model2.name, max_to_keep=1)
+
+@tf.function
+def train_step2(x, y):
+    with tf.GradientTape() as tape:
+        y_pred = model2(x, training=True)
+        loss_value = loss_fn(y, y_pred)
+    grads = tape.gradient(loss_value, model2.trainable_weights)
+    optimizer.apply_gradients(zip(grads, model2.trainable_weights))    
+    return loss_value, y_pred
+
+@tf.function
+def test_step2(x, y):
+    y_pred = model2(x, training=False)
+    return y_pred
+
+
+start_epoch = 0
+
+for e in range(start_epoch, epochs):
+    correct, total_cnt, total_loss = 0.0, 0.0, 0.0
+    log_string('-'*20 + 'Epoch ' + str(e) + '-'*20)
+    adjust_learning_rate(optimizer, e)
+    start = time.time()
+    for idx, (x, y, batch_idx) in enumerate(train_generator2):   
+        loss, y_pred = train_step2(x, y)
+
+        total_cnt += y_pred.shape[0] - PREV_CNT
+        y_pred_cls = tf.math.argmax(y_pred, axis=-1)
+        correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[PREV_CNT:], y[PREV_CNT:]), tf.float32))
+        if batch_idx == 0:
+            correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[:PREV_CNT], y[:PREV_CNT]), tf.float32))
+            total_cnt += PREV_CNT
+        total_loss += loss * y_pred.shape[0]
+        if (idx + 1) % 10 == 0 or idx+1 == len(train_generator2):
+            print("[%d / %d] Training loss: %.6f, Training acc: %.3f"%
+                  (idx+1, len(train_generator2), total_loss / total_cnt, correct / total_cnt),end='\r', flush=True)
+        
+    print("")
+    log_string("Training loss: %.6f, Training acc: %.3f"%(total_loss / total_cnt, correct / total_cnt))
+    log_string("Training time: %.2f sec "%(time.time() - start))
+    ckpt2.step.assign_add(1)
+    
+    if e==0 or (e+1 >= 10 and (e+1) % 5 == 0):
+        start = time.time()
+        
+        correct, total_cnt, total_loss = 0.0, 0.0, 0.0
+        for idx, (x, y, batch_idx) in enumerate(test_generator2):            
+            y_pred = test_step2(x, y)
+            y_pred_cls = tf.math.argmax(y_pred, axis=-1)
+            correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[PREV_CNT:], y[PREV_CNT:]), tf.float32))
+            total_cnt += y_pred.shape[0] - PREV_CNT
+            if batch_idx == 0:
+                correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[:PREV_CNT], y[:PREV_CNT]), tf.float32))
+                total_cnt += PREV_CNT
+
+            y = tf.cast(y, dtype=tf.int32)            
+            total_loss += loss_fn(y, y_pred).numpy() * y_pred.shape[0]            
+                
+            test_acc = correct / total_cnt
+            test_loss = total_loss / total_cnt
+            if (idx + 1) % 10 == 0 or idx+1 == len(test_generator2):
+                print("[%d / %d] test loss: %.6f, test accuracy: %.3f"%
+                    (idx+1, len(test_generator2), test_loss, test_acc),end='\r', flush=True)
+            
+        print("")
+        log_string("test loss: %.6f, test acc: %.3f"%(test_loss, test_acc))
+        log_string("Eval time: %.2f sec"%(time.time() - start))
+        
+        if test_acc > best_test_acc:
+            best_test_acc = test_acc
+            save_path = manager2.save()
+            print("Saved checkpoint for step {}: {}".format(int(ckpt2.step), save_path))  
+
+
+
 
 correct, total_cnt, total_loss = 0.0, 0.0, 0.0
 confusion_matrix = np.zeros((n_classes,n_classes))
-for idx, (x, y, batch_idx) in enumerate(test_generator):
-    y_pred = model(x, training=False)
+for idx, (x, y, batch_idx) in enumerate(test_generator2):
+    y_pred = model2(x, training=False)
     y_pred_cls = tf.math.argmax(y_pred, axis=-1)
-    #correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[:PREV_CNT], y[:PREV_CNT]), tf.float32))
-    #total_cnt += y_pred.shape[0] - PREV_CNT
-    #if batch_idx == 0:
-    #    correct += tf.reduce_sum(tf.cast(tf.equal(y_pred_cls[:PREV_CNT], y[:PREV_CNT]), tf.float32))
-    #    total_cnt += PREV_CNT
 
     y = tf.cast(y, dtype=tf.int32)    
     for i in range(n_classes):

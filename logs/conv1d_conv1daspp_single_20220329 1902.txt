@@ -1,0 +1,11 @@
+Namespace(data_ratio='0.25', include_type='SC,ST', model=0, num_epoch='1')
+====================Training single epoch model====================
+--------------------Epoch 0--------------------
+Training loss: 1.417738, Training acc: 0.738
+Training time: 94.32 sec 
+test loss: 0.881104, test acc: 0.741
+Eval time: 69.89 sec
+====================Training multi epoch model====================
+--------------------Epoch 0--------------------
+Training loss: 42.153427, Training acc: 0.756
+Training time: 38.07 sec 

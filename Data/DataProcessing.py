@@ -15,6 +15,7 @@ Parameters
 '''
 EPOCH_SIZE = 30
 FS = 100
+SEQ_LENGTH = 10 # sequence of epochs length
 
 BASE_PATH = '/home/aiot/data/physionet.org/files/sleep-edfx/1.0.0/'
 # EDF dataset path
@@ -30,6 +31,13 @@ save_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC')
 save_annotations_path_SC = os.path.join(PROCESSED_DATA_PATH,'annotations_SC')
 save_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST')
 save_annotations_path_ST = os.path.join(PROCESSED_DATA_PATH,'annotations_ST')
+save_filtered_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST_filtered')
+save_filtered_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC_filtered') 
+save_seq_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST_seq')
+save_ann_seq_path_ST = os.path.join(PROCESSED_DATA_PATH,'annotations_ST_seq')       
+save_seq_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC_seq')
+save_ann_seq_path_SC = os.path.join(PROCESSED_DATA_PATH,'annotations_SC_seq')   
+            
 
 '''
 Make directory
@@ -40,6 +48,12 @@ os.makedirs(save_signals_path_SC, exist_ok=True)
 os.makedirs(save_annotations_path_SC, exist_ok=True)
 os.makedirs(save_signals_path_ST, exist_ok=True)
 os.makedirs(save_annotations_path_ST, exist_ok=True)
+os.makedirs(save_filtered_signals_path_ST, exist_ok=True)
+os.makedirs(save_filtered_signals_path_SC, exist_ok=True)
+os.makedirs(save_seq_path_ST, exist_ok=True)
+os.makedirs(save_ann_seq_path_ST, exist_ok=True)
+os.makedirs(save_seq_path_SC, exist_ok=True)
+os.makedirs(save_ann_seq_path_SC, exist_ok=True)
 
 # Filtering functions: Butterworth bandpass filter
 # Notch filter(band stop filter)
@@ -257,6 +271,24 @@ def filter_signal(file_list, in_folder, output_folder):
 
         np.save(os.path.join(output_folder, signal_file), filtered_signal)
 
+def convert_to_seq(file_list, in_folder, output_folder, ann_folder, ann_out_folder):
+    
+    for signal_file in tqdm(file_list):
+        data = np.load(os.path.join(in_folder, signal_file)) #(# of epochs, fs * seconds)
+        ann_file_name = match_annotations_npy(ann_folder, signal_file)
+        ann = np.load(os.path.join(ann_folder, ann_file_name[0]))
+        
+        num_epochs = ann.shape[0]
+        seq_data = np.zeros((num_epochs - SEQ_LENGTH, SEQ_LENGTH + 1, EPOCH_SIZE * FS))
+        seq_ann_data = np.zeros((num_epochs - SEQ_LENGTH,))
+        
+        for i in range(num_epochs - SEQ_LENGTH):
+            #seq_data[i] = data[i:i+SEQ_LENGTH+1]
+            seq_ann_data[i] = ann[i+SEQ_LENGTH]
+
+        np.save(os.path.join(output_folder, signal_file), seq_data)
+        np.save(os.path.join(ann_out_folder, ann_file_name[0]), seq_ann_data)
+
 
 from scipy import signal, ndimage
 import emd
@@ -335,6 +367,7 @@ parser.add_argument('--preprocess_edf', action='store_true', help='Preprocess ed
 parser.add_argument('--filter', action='store_true', help='Filter signals - notch and butterworth')
 parser.add_argument('--ht', action='store_true', help='Do Hilbert-Huang transform')
 parser.add_argument('--include_type', default='SC', help='Processing for SC or ST')
+parser.add_argument('--make_seq', action='store_true', help='Make sequence of epochs(e.g. 10 epochs) as one record')
 FLAGS = parser.parse_args()
 
 
@@ -362,18 +395,24 @@ if __name__ == '__main__':
 
     if FLAGS.filter:  
         if include_ST:      
-            npy_signals_ST = search_signals_npy(save_signals_path_ST)
-            save_filtered_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST_filtered')
-            os.makedirs(save_filtered_signals_path_ST, exist_ok=True)
+            npy_signals_ST = search_signals_npy(save_signals_path_ST)            
             # Do filtering
             filter_signal(npy_signals_ST, save_signals_path_ST, save_filtered_signals_path_ST)
+
         if include_SC: 
-            npy_signals_SC = search_signals_npy(save_signals_path_SC)
-            save_filtered_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC_filtered')        
-            os.makedirs(save_filtered_signals_path_SC, exist_ok=True)
+            npy_signals_SC = search_signals_npy(save_signals_path_SC)            
 
             # Do filtering
             filter_signal(npy_signals_SC, save_signals_path_SC, save_filtered_signals_path_SC)
+
+    if FLAGS.make_seq:
+        if include_ST:                  
+            npy_signals_ST = search_signals_npy(save_filtered_signals_path_ST)
+            convert_to_seq(npy_signals_ST, save_filtered_signals_path_ST, save_seq_path_ST, save_annotations_path_ST, save_ann_seq_path_ST)
+
+        if include_SC:                  
+            npy_signals_SC = search_signals_npy(save_filtered_signals_path_SC)            
+            convert_to_seq(npy_signals_SC, save_filtered_signals_path_SC, save_seq_path_SC, save_annotations_path_SC, save_ann_seq_path_SC)
 
     if FLAGS.ht:
         if include_SC:   

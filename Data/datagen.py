@@ -1,12 +1,13 @@
 import os, sys
 import tensorflow as tf
 import numpy as np
+from collections import defaultdict
 
 np.random.seed(1)
 
 class DataGenerator(tf.compat.v2.keras.utils.Sequence):
     def __init__(self, list_files, list_ann_files, 
-                 batch_size=64, dim=(3000,1), n_classes=5, shuffle=True):
+                 batch_size=64, dim=(3000,1), n_classes=5, shuffle=True, balanced_sampling=False):
         # Constructor of the data generator.
         self.dim = dim
         self.batch_size = batch_size
@@ -14,7 +15,7 @@ class DataGenerator(tf.compat.v2.keras.utils.Sequence):
         self.list_ann_files = list_ann_files
         self.n_classes = n_classes
         self.shuffle = shuffle
-        self.get_cnts() #Get the data count for each file        
+        self.balanced_sampling = balanced_sampling # Balanced sampling across different classes(Excpet unknown(5) class)        
         self.on_epoch_end() #Initialize file indexes        
         
     def __len__(self): 
@@ -86,27 +87,48 @@ class DataGenerator(tf.compat.v2.keras.utils.Sequence):
         return curr_file_idx, accum_start, accum_end
         
     def on_epoch_end(self):        
+        self.get_cnts() #Get the data count for each file        
         self.curr_file_idx = 0
         # This function is called at the end of each epoch.
-        self.file_indexes = np.arange(len(self.list_files)) #This is necessary to shuffle files
-        self.data_indexes = [np.arange(cnt) for cnt in self.list_cnt]
+        self.file_indexes = np.arange(len(self.list_files)) #This is necessary to shuffle files        
         if self.shuffle == True:
             np.random.shuffle(self.file_indexes)
             for i in range(len(self.list_cnt)):
                 np.random.shuffle(self.data_indexes[i]) 
-            
-        #self.accum_start = 0 
-        #self.accum_end = self.list_cnt[self.file_indexes[0]]                 
+               
             
     def get_cnts(self):
         list_cnt = []
-        for f in self.list_files:
+        #list_min_class_cnt = []
+        self.data_indexes = []
+        for f in self.list_ann_files:
             temp_np = np.load(f)
             cnt_data = temp_np.shape[0] 
-            list_cnt.append(cnt_data)
+            
+            if self.balanced_sampling:
+                unique, counts = np.unique(temp_np, return_counts=True)                
+                cnt_per_class = int(cnt_data * 0.2)
+
+                selected_list = []
+                for i in unique:
+                    if i < 5:                        
+                        selected = np.random.choice(np.where(temp_np == i)[0], cnt_per_class)                     
+                    else:
+                        selected = np.where(temp_np == 5)[0]
+                    selected_list.append(selected)
+                selected_list = np.concatenate(selected_list)
+                
+                self.data_indexes.append(selected_list) #The data used for training
+                    
+                list_cnt.append(len(selected_list))
+                
+            else:
+                list_cnt.append(cnt_data)
+                self.data_indexes.append(np.arange(cnt_data))
             
         self.list_cnt = list_cnt
-        self.total_len = sum(list_cnt)    
+        self.total_len = sum(list_cnt)  
+        
         
         
 class DataGenerator2(tf.compat.v2.keras.utils.Sequence):

@@ -2,7 +2,7 @@ from tkinter import Y
 import tensorflow as tf
 from tensorflow.keras.layers \
     import BatchNormalization, Conv1D, Conv2D, ReLU, Input, Dense, Flatten, RepeatVector, Reshape, Dropout, add,\
-        MaxPool1D, MaxPool2D, GlobalAveragePooling1D, GlobalMaxPooling1D
+        MaxPool1D, MaxPool2D, GlobalAveragePooling1D, GlobalMaxPooling1D, LSTM
 
 class MultiheadAttention(tf.keras.layers.Layer):
     def __init__(self, n_heads, embed_dim):
@@ -478,7 +478,7 @@ class Conv1DASPP_3(tf.keras.Model):
         self.fc = Dense(n_classes, activation='softmax')
 
         
-    def call(self, x):
+    def call(self, x, out_mode='prob'):
         x = self.conv0(x)
         x = self.conv1(x)
         x = self.conv2(x)
@@ -513,11 +513,12 @@ class Conv1DASPP_3(tf.keras.Model):
         x = add([identity, x])
         x = self.dropout9(x)
 
-        x = Flatten()(x)
-        x = self.fc(x)        
-
-        return x    
-
+        if out_mode == 'feature':
+            return  x
+        else:
+            x = Flatten()(x)
+            x = self.fc(x)                
+            return x
 
 class Conv1D_SPP(tf.keras.Model):
     
@@ -585,13 +586,11 @@ class Conv1D_SPP(tf.keras.Model):
         x = self.dropout9(x)
 
         x = Flatten()(x)
-        x = self.fc(x)        
+        x = self.fc(x)                
+        return x
 
-        return x    
-
-
-class Conv1DASPP_prev(tf.keras.Model):
-    def __init__(self, input_shape=(3000,1), n_classes=6):
+class Conv1DASPPLayer(tf.keras.layers.Layer):
+    def __init__(self):
         super().__init__()
 
         self.conv0 = conv1d_block(filters=32, kernel_size=5, padding='same')
@@ -612,25 +611,21 @@ class Conv1DASPP_prev(tf.keras.Model):
         self.maxpool3 = MaxPool1D(pool_size=10)
         #self.dropout3 = Dropout(0.2)
 
-        self.conv4 = conv1d_block(filters=256, kernel_size=5, strides=2)
+        self.conv4 = conv1d_block(filters=256, kernel_size=5, strides=3)
         self.conv5 = conv1d_block(filters=256, kernel_size=5, padding='same')
         self.conv6 = conv1d_block(filters=256, kernel_size=5, padding='same')
         self.dropout6 = Dropout(0.2)
 
-        self.conv7 = conv1d_block(filters=256, kernel_size=5, strides=2)
+        self.conv7 = conv1d_block(filters=256, kernel_size=5, strides=3)
         self.conv8 = conv1d_block(filters=256, kernel_size=5, padding='same')
         self.conv9 = conv1d_block(filters=256, kernel_size=5, padding='same')
         self.dropout9 = Dropout(0.2)
 
-        self.conv10 = conv1d_block(filters=256, kernel_size=5, strides=2)
+        self.conv10 = conv1d_block(filters=256, kernel_size=5, strides=3)
         self.conv11 = conv1d_block(filters=256, kernel_size=5, padding='same')
         self.conv12 = conv1d_block(filters=256, kernel_size=5, padding='same')
         self.dropout12 = Dropout(0.2)
-
-        self.fc = Dense(n_classes, activation='softmax')
-        
-
-        
+    
     def call(self, x):
         x = self.conv0(x)
         x = self.conv1(x)
@@ -673,21 +668,63 @@ class Conv1DASPP_prev(tf.keras.Model):
         x = add([identity, x])
         x = self.dropout12(x)
 
+        return x
+
+
+class Conv1DASPP_single(tf.keras.Model):
+    def __init__(self, input_shape=(3000,1), n_classes=6):
+        super().__init__()
+        self.aspp = Conv1DASPPLayer()        
+
+        self.fc = Dense(n_classes, activation='softmax')
+        
+    def call(self, x):        
+
+        x = self.aspp(x)
+        x = Flatten()(x)
+        out = self.fc(x)
+
+        return out
+
+class Conv1DASPP_multi(tf.keras.Model):
+    def __init__(self, input_shape=(3000,1), n_classes=6, batch_size=64, prev_cnt=10):
+        super().__init__()
+        self.aspp = Conv1DASPPLayer()
+        self.batch_size = batch_size
+        self.prev_cnt = prev_cnt
+        #self.conv = conv1d_block(filters=256, kernel_size=10, padding='valid')
+        
+        #self.lstm = LSTM(64)
+        self.fc = Dense(n_classes, activation='softmax')
+        
+    def call(self, x):
+        embeddings = []
+        for i in range(self.prev_cnt + 1):
+            single_epoch = self.aspp(x[:,i])
+            embeddings.append(single_epoch)
+
+        embeddings = tf.concat(embeddings, axis=1)
+        out = self.fc(Flatten()(embeddings))
+        '''
+        x = self.conv(x)
+        x = Reshape((256,))(x)
         x_stack = []
-        for i in range(10):
+        for i in range(self.prev_cnt):
             x_bfi = x[:i]
-            x_i = tf.tile(x[i,None], [11 -i,1,1])
+            #x_i = tf.tile(x[i,None], [self.prev_cnt + 1 -i,1,1])
+            x_i = tf.tile(x[i,None], [self.prev_cnt + 1 -i,1])
             x_new = tf.concat([x_bfi, x_i], axis=0)
             x_stack.append(x_new)
 
-        for i in range(128 - 10):
-            x_stack.append(x[i:i+11])
+        for i in range(self.batch_size - self.prev_cnt):
+            x_stack.append(x[i:i+self.prev_cnt + 1])
 
         x_stack = tf.stack(x_stack)
-
-        x = Flatten()(x_stack)
+        
+        x = self.lstm(x_stack)
+        x = Flatten()(x)
         out = self.fc(x)
-
+        '''
         return out
 
 class conv2d_block(tf.keras.layers.Layer):

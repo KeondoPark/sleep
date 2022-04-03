@@ -1,0 +1,4 @@
+Namespace(data_ratio='0.25', include_type='SC,ST', model='7', num_epoch=30)
+--------------------Epoch 0--------------------
+Training loss: 2.034500, Training acc: 0.281
+Training time: 107.49 sec 
