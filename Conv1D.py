@@ -20,7 +20,14 @@ parser.add_argument('--num_epoch', default=30, help='Number of training epochs')
 FLAGS = parser.parse_args()
 
 
+ENVIRON = 'snuh'
 np.random.seed(1)
+
+dim_HT1D = (6000,1) if ENVIRON == 'snuh' else (3000,1)
+n_classes = 5 if ENVIRON == 'snuh' else 6
+epochs = int(FLAGS.num_epoch)
+bs = 64
+BASE_LEARNING_RATE = 1e-3
 
 import nets
 from Data import datagen
@@ -42,94 +49,102 @@ elif model_flag == 5:
     model = nets.Conv1DASPP_2()
 elif model_flag == 6:
     model = nets.Conv1D_SPP()
-
 elif model_flag == 7:
-    model = nets.Conv1DASPP_3()
+    dil_fac = dim_HT1D[0] // 3000
+    model = nets.Conv1DASPP_single(dil_fac=dil_fac)
 
-x = np.random.random((1,3000,1))
+x = np.random.random((1,) + dim_HT1D)
 x = tf.convert_to_tensor(x)
 print(model(x))
 print(model.name)
 
 print(model.summary())
 
-dim_HT1D = (3000,1)
-n_classes=6
-epochs = int(FLAGS.num_epoch)
-bs = 64
-BASE_LEARNING_RATE = 1e-3
-
-PROCESSED_DATA_PATH = os.path.join('/home','aiot','data','origin_npy')
-save_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC_filtered')
-save_annotations_path_SC = os.path.join(PROCESSED_DATA_PATH,'annotations_SC')
-save_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST_filtered')
-save_annotations_path_ST = os.path.join(PROCESSED_DATA_PATH,'annotations_ST')
-
 def match_annotations_npy(dirname, filepath):
     filename = os.path.basename(filepath)
-    search_filename = filename.split('-')[0][:-2]
+    if ENVIRON == 'snuh':
+        search_filename = filename.split('.')[0]        
+    else:
+        search_filename = filename.split('-')[0][:-2]
+        
     file_list = os.listdir(dirname)
-    filenames = [file for file in file_list if search_filename in file if file.endswith('.npy')]
+    filenames = [f for f in file_list if search_filename in f if f.endswith('.npy')]
     return filenames
 
+if ENVIRON == 'snuh':
+    PROCESSED_DATA_PATH = os.path.join('/tf','00_data')
+    save_signals_path = os.path.join(PROCESSED_DATA_PATH,'signals_filtered')
+    save_annotations_path = os.path.join(PROCESSED_DATA_PATH,'sleep_edf','all_channels','annotations')
+    list_files = [os.path.join(save_signals_path, f) for f in os.listdir(save_signals_path) if f.endswith('.npy')]
+    train_test_split = 0.7
+    split_cnt = int(train_test_split * len(list_files))
 
-list_files_SC = [os.path.join(save_signals_path_SC, f) for f in os.listdir(save_signals_path_SC) if f.endswith('.npy')]
-list_files_ST = [os.path.join(save_signals_path_ST, f) for f in os.listdir(save_signals_path_ST) if f.endswith('.npy')]
+    list_files_train = []
+    list_files_test = []
 
-'''
-def read_csv_to_list(filepath):
-    import csv
-    with open(filepath, newline='') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',')
-        list_filepath = [row[0] for row in spamreader]
-    return list_filepath
+    list_ann_files_train = []
+    list_ann_files_test = []
 
-SC_train = os.path.join('/home','aiot','data','origin_npy','SC_train.csv')
-SC_test = os.path.join('/home','aiot','data','origin_npy','SC_test.csv')
-list_files_train = read_csv_to_list(SC_train)
-list_files_test = read_csv_to_list(SC_test)
-list_files_train = [f + '.npy' for f in list_files_train]
-list_files_test = [f + '.npy' for f in list_files_test]
-'''
+    list_files_train = np.random.choice(list_files[:split_cnt], int(float(FLAGS.data_ratio) * split_cnt), replace=False)
+    list_files_train = list_files_train.tolist()
+    for f in list_files_train:
+        ann_file = match_annotations_npy(save_annotations_path, f)
+        list_ann_files_train.append(os.path.join(save_annotations_path, ann_file[0]))
 
-train_test_split = 0.7
-split_cnt_SC = int(train_test_split * len(list_files_SC))
-split_cnt_ST = int(train_test_split * len(list_files_ST))
+    list_files_test += list_files[split_cnt:]
 
-SC_ST = [x for x in FLAGS.include_type.split(',')]
-include_SC = 'SC' in SC_ST
-include_ST = 'ST' in SC_ST
+    for f in list_files[split_cnt:]:
+        ann_file = match_annotations_npy(save_annotations_path, f)
+        list_ann_files_test.append(os.path.join(save_annotations_path, ann_file[0]))
 
-list_files_train = []
-list_files_test = []
+else:
+    PROCESSED_DATA_PATH = os.path.join('/home','aiot','data','origin_npy')
+    save_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC_filtered')
+    save_annotations_path_SC = os.path.join(PROCESSED_DATA_PATH,'annotations_SC')
+    save_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST_filtered')
+    save_annotations_path_ST = os.path.join(PROCESSED_DATA_PATH,'annotations_ST')
 
-list_ann_files_train = []
-list_ann_files_test = []
+    list_files_SC = [os.path.join(save_signals_path_SC, f) for f in os.listdir(save_signals_path_SC) if f.endswith('.npy')]
+    list_files_ST = [os.path.join(save_signals_path_ST, f) for f in os.listdir(save_signals_path_ST) if f.endswith('.npy')]
 
-if include_SC:
-    list_files_SC_train = np.random.choice(list_files_SC[:split_cnt_SC], int(float(FLAGS.data_ratio) * split_cnt_SC), replace=False)
-    list_files_train += list_files_SC_train.tolist()
-    for f in list_files_SC_train:
-        ann_file = match_annotations_npy(save_annotations_path_SC, f)
-        list_ann_files_train.append(os.path.join(save_annotations_path_SC, ann_file[0]))
+    train_test_split = 0.7
+    split_cnt_SC = int(train_test_split * len(list_files_SC))
+    split_cnt_ST = int(train_test_split * len(list_files_ST))
 
-    list_files_test += list_files_SC[split_cnt_SC:]
+    SC_ST = [x for x in FLAGS.include_type.split(',')]
+    include_SC = 'SC' in SC_ST
+    include_ST = 'ST' in SC_ST
 
-    for f in list_files_SC[split_cnt_SC:]:
-        ann_file = match_annotations_npy(save_annotations_path_SC, f)
-        list_ann_files_test.append(os.path.join(save_annotations_path_SC, ann_file[0]))
+    list_files_train = []
+    list_files_test = []
 
-if include_ST:
-    list_files_ST_train = np.random.choice(list_files_ST[:split_cnt_ST], int(float(FLAGS.data_ratio) * split_cnt_ST), replace=False)
-    list_files_train += list_files_ST_train.tolist()
-    for f in list_files_ST_train:
-        ann_file = match_annotations_npy(save_annotations_path_ST, f)
-        list_ann_files_train.append(os.path.join(save_annotations_path_ST, ann_file[0]))
+    list_ann_files_train = []
+    list_ann_files_test = []
 
-    list_files_test += list_files_ST[split_cnt_ST:]
-    for f in list_files_ST[split_cnt_ST:]:
-        ann_file = match_annotations_npy(save_annotations_path_ST, f)
-        list_ann_files_test.append(os.path.join(save_annotations_path_ST, ann_file[0]))
+    if include_SC:
+        list_files_SC_train = np.random.choice(list_files_SC[:split_cnt_SC], int(float(FLAGS.data_ratio) * split_cnt_SC), replace=False)
+        list_files_train += list_files_SC_train.tolist()
+        for f in list_files_SC_train:
+            ann_file = match_annotations_npy(save_annotations_path_SC, f)
+            list_ann_files_train.append(os.path.join(save_annotations_path_SC, ann_file[0]))
+
+        list_files_test += list_files_SC[split_cnt_SC:]
+
+        for f in list_files_SC[split_cnt_SC:]:
+            ann_file = match_annotations_npy(save_annotations_path_SC, f)
+            list_ann_files_test.append(os.path.join(save_annotations_path_SC, ann_file[0]))
+
+    if include_ST:
+        list_files_ST_train = np.random.choice(list_files_ST[:split_cnt_ST], int(float(FLAGS.data_ratio) * split_cnt_ST), replace=False)
+        list_files_train += list_files_ST_train.tolist()
+        for f in list_files_ST_train:
+            ann_file = match_annotations_npy(save_annotations_path_ST, f)
+            list_ann_files_train.append(os.path.join(save_annotations_path_ST, ann_file[0]))
+
+        list_files_test += list_files_ST[split_cnt_ST:]
+        for f in list_files_ST[split_cnt_ST:]:
+            ann_file = match_annotations_npy(save_annotations_path_ST, f)
+            list_ann_files_test.append(os.path.join(save_annotations_path_ST, ann_file[0]))
 
 train_generator = datagen.DataGenerator(list_files_train, list_ann_files_train, 
                           batch_size=bs, dim=dim_HT1D, n_classes=n_classes, shuffle=True, balanced_sampling=True)
@@ -139,6 +154,7 @@ test_generator = datagen.DataGenerator(list_files_test, list_ann_files_test,
 # Tested loss with class weight, but doesn't improve the accuracy
 print(train_generator.list_cnt)
 
+'''
 from collections import defaultdict
 cnt_class = defaultdict(int)
 for x, y in train_generator:
@@ -152,7 +168,7 @@ class_weight = 0.1 * np.ones((n_classes,))
 class_weight[:n_classes-1] = np.sqrt(sum(cnt_class_np[:n_classes-1])/(n_classes * cnt_class_np[:n_classes-1]))
 print("Count class", cnt_class_np)
 print("Class weight", class_weight)
-
+'''
 
 def get_current_lr(epoch):
     lr = BASE_LEARNING_RATE

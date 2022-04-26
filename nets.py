@@ -1,4 +1,4 @@
-from tkinter import Y
+#from tkinter import Y
 import tensorflow as tf
 from tensorflow.keras.layers \
     import BatchNormalization, Conv1D, Conv2D, ReLU, Input, Dense, Flatten, RepeatVector, Reshape, Dropout, add,\
@@ -590,7 +590,7 @@ class Conv1D_SPP(tf.keras.Model):
         return x
 
 class Conv1DASPPLayer(tf.keras.layers.Layer):
-    def __init__(self):
+    def __init__(self, dil_fac=1):
         super().__init__()
 
         self.conv0 = conv1d_block(filters=32, kernel_size=5, padding='same')
@@ -598,11 +598,11 @@ class Conv1DASPPLayer(tf.keras.layers.Layer):
         self.conv2 = conv1d_block(filters=64, kernel_size=5, padding='same')
 
         #ASPP
-        self.conv3_1 = conv1d_block(filters=64, kernel_size=10, dilation_rate=1, padding='same')
-        self.conv3_2 = conv1d_block(filters=64, kernel_size=10, dilation_rate=2, padding='same')
-        self.conv3_3 = conv1d_block(filters=64, kernel_size=10, dilation_rate=4, padding='same')
-        self.conv3_4 = conv1d_block(filters=64, kernel_size=10, dilation_rate=16, padding='same')
-        self.conv3_5 = conv1d_block(filters=64, kernel_size=10, dilation_rate=32, padding='same')
+        self.conv3_1 = conv1d_block(filters=64, kernel_size=10, dilation_rate=1 * dil_fac, padding='same')
+        self.conv3_2 = conv1d_block(filters=64, kernel_size=10, dilation_rate=2 * dil_fac, padding='same')
+        self.conv3_3 = conv1d_block(filters=64, kernel_size=10, dilation_rate=4 * dil_fac, padding='same')
+        self.conv3_4 = conv1d_block(filters=64, kernel_size=10, dilation_rate=16 * dil_fac, padding='same')
+        self.conv3_5 = conv1d_block(filters=64, kernel_size=10, dilation_rate=32 * dil_fac, padding='same')
         self.gpool = GlobalAveragePooling1D()
         self.mha1 = MultiheadAttention_Feat(n_heads=2, embed_dim=32)
         self.conv3_5_1 = Conv1D(filters=64, kernel_size=1)
@@ -672,9 +672,9 @@ class Conv1DASPPLayer(tf.keras.layers.Layer):
 
 
 class Conv1DASPP_single(tf.keras.Model):
-    def __init__(self, input_shape=(3000,1), n_classes=6):
+    def __init__(self, input_shape=(3000,1), n_classes=6, dil_fac=1):
         super().__init__()
-        self.aspp = Conv1DASPPLayer()        
+        self.aspp = Conv1DASPPLayer(dil_fac=dil_fac)        
 
         self.fc = Dense(n_classes, activation='softmax')
         

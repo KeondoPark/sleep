@@ -20,10 +20,11 @@ parser.add_argument('--num_epoch', default=30, help='Number of training epochs')
 FLAGS = parser.parse_args()
 
 
+ENVIRON = 'snuh'
 np.random.seed(1)
 
-dim_HT1D = (3000,1)
-n_classes=6
+dim_HT1D = (6000,1) if ENVIRON == 'snuh' else (3000,1)
+n_classes = 5 if ENVIRON == 'snuh' else 6
 epochs = int(FLAGS.num_epoch)
 bs = 128
 PREV_CNT = 10
@@ -35,11 +36,12 @@ import importlib
 importlib.reload(nets)  # Python 3.4+
 model_flag = int(FLAGS.model)
 if model_flag == 0:
-    model = nets.Conv1DASPP_single()
+    dil_fac = dim_HT1D[0] // 3000
+    model = nets.Conv1DASPP_single(dil_fac=dil_fac)    
     model2 = nets.Conv1DASPP_multi(batch_size=bs, prev_cnt=PREV_CNT)
 
 
-x = np.random.random((bs,3000,1))
+x = np.random.random((bs,) + dim_HT1D)
 x = tf.convert_to_tensor(x)
 print(model(x))
 print(model.aspp(x))
@@ -49,23 +51,56 @@ print(model.summary())
 print(model2.name)
 print(model2.summary())
 
-PROCESSED_DATA_PATH = os.path.join('/home','aiot','data','origin_npy')
-save_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC_filtered')
-save_annotations_path_SC = os.path.join(PROCESSED_DATA_PATH,'annotations_SC')
-save_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST_filtered')
-save_annotations_path_ST = os.path.join(PROCESSED_DATA_PATH,'annotations_ST')
-
-save_signals_path_SC_seq = os.path.join(PROCESSED_DATA_PATH,'signals_SC_seq')
-save_annotations_path_SC_seq = os.path.join(PROCESSED_DATA_PATH,'annotations_SC_seq')
-save_signals_path_ST_seq = os.path.join(PROCESSED_DATA_PATH,'signals_ST_seq')
-save_annotations_path_ST_seq = os.path.join(PROCESSED_DATA_PATH,'annotations_ST_seq')
 
 def match_annotations_npy(dirname, filepath):
     filename = os.path.basename(filepath)
-    search_filename = filename.split('-')[0][:-2]
+    if ENVIRON == 'snuh':
+        search_filename = filename.split('.')[0]        
+    else:
+        search_filename = filename.split('-')[0][:-2]
     file_list = os.listdir(dirname)
     filenames = [file for file in file_list if search_filename in file if file.endswith('.npy')]
     return filenames
+
+if ENVIRON == 'snuh':
+    PROCESSED_DATA_PATH = os.path.join('/tf','00_data')
+    save_signals_path = os.path.join(PROCESSED_DATA_PATH,'signals_filtered')
+    save_annotations_path = os.path.join(PROCESSED_DATA_PATH,'sleep_edf','all_channels','annotations')
+    list_files = [os.path.join(save_signals_path, f) for f in os.listdir(save_signals_path) if f.endswith('.npy')]
+    train_test_split = 0.7
+    split_cnt = int(train_test_split * len(list_files))
+
+    list_files_train = []
+    list_files_test = []
+
+    list_ann_files_train = []
+    list_ann_files_test = []
+
+    list_files_train = np.random.choice(list_files[:split_cnt], int(float(FLAGS.data_ratio) * split_cnt), replace=False)
+    list_files_train = list_files_train.tolist()
+    for f in list_files_train:
+        ann_file = match_annotations_npy(save_annotations_path, f)
+        list_ann_files_train.append(os.path.join(save_annotations_path, ann_file[0]))
+
+    list_files_test += list_files[split_cnt:]
+
+    for f in list_files[split_cnt:]:
+        ann_file = match_annotations_npy(save_annotations_path, f)
+        list_ann_files_test.append(os.path.join(save_annotations_path, ann_file[0]))
+
+else:
+    PROCESSED_DATA_PATH = os.path.join('/home','aiot','data','origin_npy')
+    save_signals_path_SC = os.path.join(PROCESSED_DATA_PATH,'signals_SC_filtered')
+    save_annotations_path_SC = os.path.join(PROCESSED_DATA_PATH,'annotations_SC')
+    save_signals_path_ST = os.path.join(PROCESSED_DATA_PATH,'signals_ST_filtered')
+    save_annotations_path_ST = os.path.join(PROCESSED_DATA_PATH,'annotations_ST')
+
+    save_signals_path_SC_seq = os.path.join(PROCESSED_DATA_PATH,'signals_SC_seq')
+    save_annotations_path_SC_seq = os.path.join(PROCESSED_DATA_PATH,'annotations_SC_seq')
+    save_signals_path_ST_seq = os.path.join(PROCESSED_DATA_PATH,'signals_ST_seq')
+    save_annotations_path_ST_seq = os.path.join(PROCESSED_DATA_PATH,'annotations_ST_seq')
+
+
 
 
 list_files_SC = [os.path.join(save_signals_path_SC, f) for f in os.listdir(save_signals_path_SC) if f.endswith('.npy')]
