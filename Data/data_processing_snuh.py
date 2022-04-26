@@ -2,7 +2,7 @@ import os, sys
 import numpy as np
 from tqdm import tqdm
 
-data_folder = '/tf/data/sleep_edf/all_channels'
+data_folder = '/tf/00_data/sleep_edf/all_channels'
 ann_folder = os.path.join(data_folder, 'annotations')
 
 npy_files = os.listdir(data_folder)
@@ -15,17 +15,22 @@ sample_data = np.load(os.path.join(data_folder, sample_file)) #Shape: [23, 6000 
 sample_ann = np.load(os.path.join(ann_folder, ann_file)) #Shape: [num_epoch], data is one of ['N1', 'N2', 'N3', 'REM', 'Wake']
 
 
-DATA_PATH = '/tf/mydata'
+DATA_PATH = '/tf/00_data'
 save_anns_path = os.path.join(DATA_PATH,'anns_number')
 os.makedirs(save_anns_path, exist_ok=True)
 
+EPOCH_SIZE = 30
+FS = 200
+SEQ_LENGTH = 10 # sequence of epochs length
+
+'''
 for ann in ann_files:    
     ann_np = np.load(os.path.join(ann_folder, ann))
     condlist = [ann_np == 'Wake', ann_np == 'N1', ann_np == 'N2', ann_np == 'N3', ann_np == 'REM']
     choicelist = [0, 1, 2, 3, 4]
     ann_number = np.select(condlist, choicelist, default=5)    
     np.save(os.path.join(save_anns_path, ann), ann_number)
-    
+''' 
     
 ''' Optimize with Numba, not very useful in this case
 from numba import jit
@@ -62,6 +67,19 @@ end = time.time()
 print(end - start)
 '''
 
+def search_signals_npy(dirname):
+    filenames = os.listdir(dirname)
+    filenames = [file for file in filenames if file.endswith('.npy')]
+    
+    return filenames
+
+def match_annotations_npy(dirname, filename):
+    search_filename = filename.split('-')[0][:-2]
+    file_list = os.listdir(dirname)
+    filenames = [file for file in file_list if search_filename in file if file.endswith('.npy')]
+
+    return filenames
+
 # Filtering functions: Butterworth bandpass filter
 # Notch filter(band stop filter)
 from scipy import signal
@@ -91,11 +109,16 @@ def notch_filter(data, f0, Q, fs):
 save_signals_path = os.path.join(DATA_PATH,'signals_filtered')
 os.makedirs(save_signals_path, exist_ok=True)
 
+save_seq_path = os.path.join(DATA_PATH,'signals_seq')
+save_ann_seq_path = os.path.join(DATA_PATH,'annotations_seq')
+
+os.makedirs(save_seq_path, exist_ok=True)
+os.makedirs(save_ann_seq_path, exist_ok=True)
 def filter_signal(file_list, in_folder, output_folder):
     for signal_file in tqdm(file_list):
         data = np.load(os.path.join(in_folder, signal_file))
-        fs = 200 #Sample rate, in Hz
-        seconds = 30
+        fs = FS #Sample rate, in Hz
+        seconds = EPOCH_SIZE
         num_samples = fs * seconds        
         
         single_channel = data[19] #use 19th channel ('C3-A2')
@@ -129,4 +152,26 @@ def filter_signal(file_list, in_folder, output_folder):
         np.save(os.path.join(output_folder, signal_file), filtered_signal)
         
         
-filter_signal(npy_files, data_folder, save_signals_path)
+#filter_signal(npy_files, data_folder, save_signals_path)
+
+
+def convert_to_seq(file_list, in_folder, output_folder, ann_folder, ann_out_folder):
+    
+    for signal_file in tqdm(file_list):
+        data = np.load(os.path.join(in_folder, signal_file)) #(# of epochs, fs * seconds)
+        ann_file_name = match_annotations_npy(ann_folder, signal_file)
+        ann = np.load(os.path.join(ann_folder, ann_file_name[0]))
+        
+        num_epochs = ann.shape[0]
+        seq_data = np.zeros((num_epochs - SEQ_LENGTH, SEQ_LENGTH + 1, EPOCH_SIZE * FS))
+        seq_ann_data = np.zeros((num_epochs - SEQ_LENGTH,))
+        
+        for i in range(num_epochs - SEQ_LENGTH):
+            #seq_data[i] = data[i:i+SEQ_LENGTH+1]
+            seq_ann_data[i] = ann[i+SEQ_LENGTH]
+
+        np.save(os.path.join(output_folder, signal_file), seq_data)
+        np.save(os.path.join(ann_out_folder, ann_file_name[0]), seq_ann_data)
+        
+npy_signals = search_signals_npy(save_signals_path)
+convert_to_seq(npy_signals, save_signals_path, save_seq_path, ann_folder, save_ann_seq_path)
