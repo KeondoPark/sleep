@@ -1,0 +1,46 @@
+Namespace(data_ratio='0.25', include_type='SC', model='6', num_epoch=30)
+--------------------Epoch 0--------------------
+Training loss: 1.595883, Training acc: 0.417
+Training time: 89.16 sec 
+test loss: 1.490303, test acc: 0.547
+Eval time: 84.65 sec
+--------------------Epoch 1--------------------
+Training loss: 1.153003, Training acc: 0.581
+Training time: 85.36 sec 
+--------------------Epoch 2--------------------
+Training loss: 0.998832, Training acc: 0.640
+Training time: 85.22 sec 
+--------------------Epoch 3--------------------
+Training loss: 0.910843, Training acc: 0.670
+Training time: 85.40 sec 
+test loss: 1.300660, test acc: 0.648
+Eval time: 83.77 sec
+--------------------Epoch 4--------------------
+Training loss: 0.853893, Training acc: 0.692
+Training time: 85.75 sec 
+--------------------Epoch 5--------------------
+Training loss: 0.808682, Training acc: 0.707
+Training time: 85.89 sec 
+--------------------Epoch 6--------------------
+Training loss: 0.766626, Training acc: 0.719
+Training time: 87.91 sec 
+test loss: 1.288553, test acc: 0.663
+Eval time: 84.10 sec
+--------------------Epoch 7--------------------
+Training loss: 0.740875, Training acc: 0.729
+Training time: 85.17 sec 
+--------------------Epoch 8--------------------
+Training loss: 0.700000, Training acc: 0.743
+Training time: 88.88 sec 
+--------------------Epoch 9--------------------
+Training loss: 0.677204, Training acc: 0.751
+Training time: 85.26 sec 
+test loss: 1.213374, test acc: 0.685
+Eval time: 84.23 sec
+--------------------Epoch 10--------------------
+Training loss: 0.650371, Training acc: 0.760
+Training time: 85.82 sec 
+--------------------Epoch 11--------------------
+Training loss: 0.629558, Training acc: 0.768
+Training time: 85.24 sec 
+--------------------Epoch 12--------------------

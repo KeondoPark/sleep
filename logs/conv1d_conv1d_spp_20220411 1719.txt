@@ -1,0 +1,2 @@
+Namespace(data_ratio='0.25', include_type='SC', model='6', num_epoch=30)
+--------------------Epoch 0--------------------

@@ -1,0 +1,115 @@
+Namespace(data_ratio='0.25', include_type='SC,ST', model='1', num_epoch=30)
+====================Training single epoch model====================
+--------------------Confusion Matrix--------------------
+0.958 0.016 0.006 0.002 0.008 0.011 
+0.275 0.366 0.197 0.004 0.157 0.001 
+0.012 0.089 0.772 0.043 0.083 0.001 
+0.009 0.024 0.265 0.672 0.030 0.000 
+0.119 0.125 0.118 0.005 0.632 0.000 
+0.917 0.000 0.083 0.000 0.000 0.000 
+--------------------Confusion Matrix Counts--------------------
+84096 1386 490 185 673 955 
+954 1270 683 13 544 5 
+356 2593 22444 1261 2410 18 
+53 146 1612 4087 180 1 
+1252 1317 1238 53 6641 2 
+11 0 1 0 0 0 
+====================Training multi epoch model====================
+--------------------Epoch 0--------------------
+Training loss: 0.272539, Training acc: 0.907
+Training time: 527.34 sec 
+test loss: 0.507175, test acc: 0.861
+Eval time: 906.83 sec
+--------------------Epoch 1--------------------
+Training loss: 0.264270, Training acc: 0.912
+Training time: 502.10 sec 
+--------------------Epoch 2--------------------
+Training loss: 0.260161, Training acc: 0.919
+Training time: 498.19 sec 
+--------------------Epoch 3--------------------
+Training loss: 0.225834, Training acc: 0.923
+Training time: 499.24 sec 
+--------------------Epoch 4--------------------
+Training loss: 0.205570, Training acc: 0.928
+Training time: 498.94 sec 
+--------------------Epoch 5--------------------
+Training loss: 0.199347, Training acc: 0.930
+Training time: 499.11 sec 
+--------------------Epoch 6--------------------
+Training loss: 0.189266, Training acc: 0.933
+Training time: 497.75 sec 
+--------------------Epoch 7--------------------
+Training loss: 0.181959, Training acc: 0.936
+Training time: 500.15 sec 
+--------------------Epoch 8--------------------
+Training loss: 0.173400, Training acc: 0.938
+Training time: 498.39 sec 
+--------------------Epoch 9--------------------
+Training loss: 0.170247, Training acc: 0.940
+Training time: 498.03 sec 
+test loss: 0.690866, test acc: 0.847
+Eval time: 895.37 sec
+--------------------Epoch 10--------------------
+Training loss: 0.189311, Training acc: 0.932
+Training time: 496.32 sec 
+--------------------Epoch 11--------------------
+Training loss: 0.171283, Training acc: 0.936
+Training time: 498.92 sec 
+--------------------Epoch 12--------------------
+Training loss: 0.165000, Training acc: 0.939
+Training time: 497.63 sec 
+--------------------Epoch 13--------------------
+Training loss: 0.160601, Training acc: 0.940
+Training time: 497.88 sec 
+--------------------Epoch 14--------------------
+Training loss: 0.157946, Training acc: 0.941
+Training time: 497.89 sec 
+test loss: 0.590129, test acc: 0.863
+Eval time: 879.25 sec
+--------------------Epoch 15--------------------
+Training loss: 0.154945, Training acc: 0.942
+Training time: 500.69 sec 
+--------------------Epoch 16--------------------
+Training loss: 0.152320, Training acc: 0.943
+Training time: 497.25 sec 
+--------------------Epoch 17--------------------
+Training loss: 0.150269, Training acc: 0.943
+Training time: 497.47 sec 
+--------------------Epoch 18--------------------
+Training loss: 0.148927, Training acc: 0.945
+Training time: 497.16 sec 
+--------------------Epoch 19--------------------
+Training loss: 0.147728, Training acc: 0.944
+Training time: 497.11 sec 
+test loss: 0.590267, test acc: 0.863
+Eval time: 879.00 sec
+--------------------Epoch 20--------------------
+Training loss: 0.157596, Training acc: 0.939
+Training time: 497.83 sec 
+--------------------Epoch 21--------------------
+Training loss: 0.150400, Training acc: 0.942
+Training time: 497.91 sec 
+--------------------Epoch 22--------------------
+Training loss: 0.150535, Training acc: 0.942
+Training time: 496.73 sec 
+--------------------Epoch 23--------------------
+Training loss: 0.150765, Training acc: 0.942
+Training time: 496.58 sec 
+--------------------Epoch 24--------------------
+Training loss: 0.148590, Training acc: 0.943
+Training time: 496.50 sec 
+test loss: 0.556793, test acc: 0.870
+Eval time: 876.98 sec
+--------------------Epoch 25--------------------
+Training loss: 0.148631, Training acc: 0.943
+Training time: 497.23 sec 
+--------------------Epoch 26--------------------
+Training loss: 0.146688, Training acc: 0.944
+Training time: 496.97 sec 
+--------------------Epoch 27--------------------
+Training loss: 0.148251, Training acc: 0.944
+Training time: 497.29 sec 
+--------------------Epoch 28--------------------
+Training loss: 0.147853, Training acc: 0.943
+Training time: 496.59 sec 
+--------------------Epoch 29--------------------

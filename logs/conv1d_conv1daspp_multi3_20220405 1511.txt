@@ -1,0 +1,8 @@
+Namespace(data_ratio='1.0', include_type='SC,ST', model=0, num_epoch=30)
+====================Training multi epoch model====================
+--------------------Epoch 0--------------------
+Training loss: 0.880710, Training acc: 0.815
+Training time: 4080.91 sec 
+test loss: 1.117854, test acc: 0.680
+Eval time: 846.34 sec
+--------------------Epoch 1--------------------

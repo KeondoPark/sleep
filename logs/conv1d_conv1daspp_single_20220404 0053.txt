@@ -1,0 +1,23 @@
+Namespace(data_ratio='0.25', include_type='SC,ST', model=0, num_epoch='1')
+====================Training single epoch model====================
+--------------------Epoch 0--------------------
+Training loss: 1.081696, Training acc: 0.745
+Training time: 94.79 sec 
+test loss: 1.029037, test acc: 0.753
+Eval time: 82.02 sec
+--------------------Confusion Matrix--------------------
+0.822 0.043 0.059 0.003 0.065 0.009 
+0.263 0.263 0.411 0.011 0.053 0.000 
+0.088 0.064 0.580 0.160 0.105 0.003 
+nan nan nan nan nan nan 
+0.091 0.095 0.633 0.008 0.173 0.000 
+nan nan nan nan nan nan 
+--------------------Confusion Matrix Counts--------------------
+83594 4362 5972 310 6624 884 
+25 25 39 1 5 0 
+2902 2115 19059 5271 3438 97 
+0 0 0 0 0 0 
+201 210 1398 17 381 0 
+0 0 0 0 0 0 
+====================Training multi epoch model====================
+--------------------Epoch 0--------------------
