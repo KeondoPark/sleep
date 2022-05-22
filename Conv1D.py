@@ -63,7 +63,7 @@ print(model.summary())
 def match_annotations_npy(dirname, filepath):
     filename = os.path.basename(filepath)
     if ENVIRON == 'snuh':
-        search_filename = filename.split('.')[0]        
+        search_filename = filename.split('.')[0]
     else:
         search_filename = filename.split('-')[0][:-2]
         
@@ -241,9 +241,9 @@ loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 ckpt = tf.train.Checkpoint(step=tf.Variable(0), optimizer=optimizer, net=model)
 manager = tf.train.CheckpointManager(ckpt, '.tf_ckpt/ckpt_' + model.name, max_to_keep=1)
 start_epoch = 0
-#if manager.latest_checkpoint:
-#    ckpt.restore(manager.latest_checkpoint)
-#    start_epoch = ckpt.step.numpy()-1
+if manager.latest_checkpoint:
+   ckpt.restore(manager.latest_checkpoint)
+   start_epoch = ckpt.step.numpy()-1
 best_test_acc = 0.0
 
 @tf.function

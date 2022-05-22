@@ -74,7 +74,8 @@ def search_signals_npy(dirname):
     return filenames
 
 def match_annotations_npy(dirname, filename):
-    search_filename = filename.split('-')[0][:-2]
+    #search_filename = filename.split('-')[0][:-2]
+    search_filename = filename.split('.')[0]
     file_list = os.listdir(dirname)
     filenames = [file for file in file_list if search_filename in file if file.endswith('.npy')]
 
@@ -160,6 +161,7 @@ def convert_to_seq(file_list, in_folder, output_folder, ann_folder, ann_out_fold
     for signal_file in tqdm(file_list):
         data = np.load(os.path.join(in_folder, signal_file)) #(# of epochs, fs * seconds)
         ann_file_name = match_annotations_npy(ann_folder, signal_file)
+        print(ann_file_name)
         ann = np.load(os.path.join(ann_folder, ann_file_name[0]))
         
         num_epochs = ann.shape[0]
