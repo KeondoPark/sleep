@@ -1,0 +1,1 @@
+Namespace(env='snuh', include_type='SC', model=0, tflite=True)

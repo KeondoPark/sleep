@@ -1,0 +1,7 @@
+Namespace(data_ratio=1.0, env='snuh', include_type='SC', model='6', num_epoch=50)
+--------------------Epoch 0--------------------
+Training loss: 0.902677, Training acc: 0.673
+Training time: 695.14 sec 
+test loss: 1.062946, test acc: 0.581
+Eval time: 256.21 sec
+--------------------Epoch 1--------------------

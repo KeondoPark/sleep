@@ -1,0 +1,2 @@
+model_checkpoint_path: "ckpt_conv1d_spp_quant"
+all_model_checkpoint_paths: "ckpt_conv1d_spp_quant"

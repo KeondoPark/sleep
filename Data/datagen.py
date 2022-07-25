@@ -22,7 +22,7 @@ class DataGenerator(tf.compat.v2.keras.utils.Sequence):
         # Denotes the number of batches per epoch
         return int((self.total_len+self.batch_size+1) / self.batch_size)
     
-    def __getitem__(self, index):
+    def __getitem__(self, index):        
         
         start = index*self.batch_size
         end = min((index+1)*self.batch_size, self.total_len)
@@ -65,7 +65,7 @@ class DataGenerator(tf.compat.v2.keras.utils.Sequence):
             
             #curr_np = curr_np[1:-1]
             #curr_ann = curr_ann[1:-1]
-            
+
             X_2 = curr_np[:end - accum_start]
             y_2 = curr_ann[:end - accum_start]
             X[from_curr:] = np.expand_dims(X_2, axis=-1)

@@ -1,0 +1,184 @@
+--------------------Epoch 0--------------------
+Training total loss: 46157.195312, recon_loss: 4577.679199, kl_loss: 380.266937
+Training time: 979.42 sec 
+test total loss: 3676.458740, recon loss : 3201.504395, kl loss : 474.955841
+Eval time: 160.20 sec
+--------------------Epoch 1--------------------
+Training total loss: 29197.232422, recon_loss: 2876.579346, kl_loss: 431.449829
+Training time: 963.43 sec 
+--------------------Epoch 2--------------------
+Training total loss: 27083.208984, recon_loss: 2672.252930, kl_loss: 360.768890
+Training time: 963.06 sec 
+--------------------Epoch 3--------------------
+Training total loss: 26538.949219, recon_loss: 2621.156250, kl_loss: 327.424011
+Training time: 963.21 sec 
+test total loss: 2990.916016, recon loss : 2675.265869, kl loss : 315.648468
+Eval time: 158.59 sec
+--------------------Epoch 4--------------------
+Training total loss: 26203.738281, recon_loss: 2589.094971, kl_loss: 312.790283
+Training time: 962.29 sec 
+--------------------Epoch 5--------------------
+Training total loss: 25981.562500, recon_loss: 2568.132080, kl_loss: 300.303101
+Training time: 963.38 sec 
+--------------------Epoch 6--------------------
+Training total loss: 25839.761719, recon_loss: 2554.643311, kl_loss: 293.341583
+Training time: 964.16 sec 
+test total loss: 2883.346924, recon loss : 2593.215332, kl loss : 290.132660
+Eval time: 159.28 sec
+--------------------Epoch 7--------------------
+Training total loss: 25731.310547, recon_loss: 2544.244873, kl_loss: 288.903839
+Training time: 962.88 sec 
+--------------------Epoch 8--------------------
+Training total loss: 25646.412109, recon_loss: 2536.063232, kl_loss: 285.878418
+Training time: 963.50 sec 
+--------------------Epoch 9--------------------
+Training total loss: 25495.816406, recon_loss: 2520.621094, kl_loss: 289.621704
+Training time: 964.12 sec 
+test total loss: 2840.064941, recon loss : 2551.653320, kl loss : 288.414398
+Eval time: 158.69 sec
+--------------------Epoch 10--------------------
+Training total loss: 25232.736328, recon_loss: 2494.444092, kl_loss: 288.298767
+Training time: 964.98 sec 
+--------------------Epoch 11--------------------
+Training total loss: 25191.101562, recon_loss: 2490.410889, kl_loss: 286.949341
+Training time: 964.95 sec 
+--------------------Epoch 12--------------------
+Training total loss: 25172.123047, recon_loss: 2488.604248, kl_loss: 286.048096
+Training time: 965.37 sec 
+test total loss: 2781.640137, recon loss : 2494.572021, kl loss : 287.069489
+Eval time: 164.21 sec
+--------------------Epoch 13--------------------
+Training total loss: 25157.642578, recon_loss: 2487.238525, kl_loss: 285.366364
+Training time: 962.59 sec 
+--------------------Epoch 14--------------------
+Training total loss: 25145.468750, recon_loss: 2486.063965, kl_loss: 284.818909
+Training time: 962.07 sec 
+--------------------Epoch 15--------------------
+Training total loss: 25134.751953, recon_loss: 2485.049316, kl_loss: 284.223114
+Training time: 964.44 sec 
+test total loss: 2776.072266, recon loss : 2491.018311, kl loss : 285.053955
+Eval time: 156.22 sec
+--------------------Epoch 16--------------------
+Training total loss: 25124.833984, recon_loss: 2484.107178, kl_loss: 283.749603
+Training time: 964.54 sec 
+--------------------Epoch 17--------------------
+Training total loss: 25116.101562, recon_loss: 2483.265137, kl_loss: 283.364716
+Training time: 962.70 sec 
+--------------------Epoch 18--------------------
+Training total loss: 25107.367188, recon_loss: 2482.453369, kl_loss: 282.758118
+Training time: 960.70 sec 
+test total loss: 2772.135254, recon loss : 2488.444580, kl loss : 283.692657
+Eval time: 159.16 sec
+--------------------Epoch 19--------------------
+Training total loss: 25098.869141, recon_loss: 2481.679932, kl_loss: 282.062988
+Training time: 962.96 sec 
+--------------------Epoch 20--------------------
+Training total loss: 25074.021484, recon_loss: 2479.199951, kl_loss: 282.070312
+Training time: 963.31 sec 
+--------------------Epoch 21--------------------
+Training total loss: 25070.519531, recon_loss: 2478.859863, kl_loss: 281.833435
+Training time: 963.29 sec 
+test total loss: 2767.515869, recon loss : 2485.507568, kl loss : 282.005615
+Eval time: 159.36 sec
+--------------------Epoch 22--------------------
+Training total loss: 25069.000000, recon_loss: 2478.723877, kl_loss: 281.761505
+Training time: 965.39 sec 
+--------------------Epoch 23--------------------
+Training total loss: 25067.652344, recon_loss: 2478.591064, kl_loss: 281.713867
+Training time: 966.38 sec 
+--------------------Epoch 24--------------------
+Training total loss: 25066.689453, recon_loss: 2478.502197, kl_loss: 281.640839
+Training time: 963.93 sec 
+test total loss: 2766.961182, recon loss : 2485.081543, kl loss : 281.878754
+Eval time: 159.88 sec
+--------------------Epoch 25--------------------
+Training total loss: 25065.429688, recon_loss: 2478.383057, kl_loss: 281.593445
+Training time: 962.69 sec 
+--------------------Epoch 26--------------------
+Training total loss: 25064.392578, recon_loss: 2478.287598, kl_loss: 281.458282
+Training time: 962.48 sec 
+--------------------Epoch 27--------------------
+Training total loss: 25063.337891, recon_loss: 2478.190918, kl_loss: 281.435699
+Training time: 962.07 sec 
+test total loss: 2766.456787, recon loss : 2484.764648, kl loss : 281.689819
+Eval time: 155.64 sec
+--------------------Epoch 28--------------------
+Training total loss: 25061.998047, recon_loss: 2478.064453, kl_loss: 281.337524
+Training time: 963.43 sec 
+--------------------Epoch 29--------------------
+Training total loss: 25061.279297, recon_loss: 2477.991943, kl_loss: 281.380615
+Training time: 965.83 sec 
+--------------------Epoch 30--------------------
+Training total loss: 25058.353516, recon_loss: 2477.679199, kl_loss: 281.596497
+Training time: 966.40 sec 
+test total loss: 2766.118652, recon loss : 2484.592041, kl loss : 281.528473
+Eval time: 161.33 sec
+--------------------Epoch 31--------------------
+Training total loss: 25057.841797, recon_loss: 2477.632568, kl_loss: 281.496033
+Training time: 966.55 sec 
+--------------------Epoch 32--------------------
+Training total loss: 25057.648438, recon_loss: 2477.612549, kl_loss: 281.443054
+Training time: 965.43 sec 
+--------------------Epoch 33--------------------
+Training total loss: 25057.541016, recon_loss: 2477.614502, kl_loss: 281.390503
+Training time: 966.28 sec 
+test total loss: 2765.912354, recon loss : 2484.528564, kl loss : 281.381836
+Eval time: 158.56 sec
+--------------------Epoch 34--------------------
+Training total loss: 25057.445312, recon_loss: 2477.605469, kl_loss: 281.376282
+Training time: 965.04 sec 
+--------------------Epoch 35--------------------
+Training total loss: 25057.224609, recon_loss: 2477.593994, kl_loss: 281.383209
+Training time: 967.29 sec 
+--------------------Epoch 36--------------------
+Training total loss: 25057.060547, recon_loss: 2477.570557, kl_loss: 281.372162
+Training time: 965.41 sec 
+test total loss: 2765.867188, recon loss : 2484.498047, kl loss : 281.372131
+Eval time: 162.38 sec
+--------------------Epoch 37--------------------
+Training total loss: 25056.931641, recon_loss: 2477.556396, kl_loss: 281.376648
+Training time: 966.86 sec 
+--------------------Epoch 38--------------------
+Training total loss: 25056.812500, recon_loss: 2477.547607, kl_loss: 281.383881
+Training time: 969.51 sec 
+--------------------Epoch 39--------------------
+Training total loss: 25056.726562, recon_loss: 2477.532959, kl_loss: 281.373535
+Training time: 967.68 sec 
+test total loss: 2765.835938, recon loss : 2484.471680, kl loss : 281.365784
+Eval time: 162.72 sec
+--------------------Epoch 40--------------------
+Training total loss: 25056.798828, recon_loss: 2477.538330, kl_loss: 281.379822
+Training time: 966.19 sec 
+--------------------Epoch 41--------------------
+Training total loss: 25056.457031, recon_loss: 2477.512939, kl_loss: 281.384644
+Training time: 966.42 sec 
+--------------------Epoch 42--------------------
+Training total loss: 25056.250000, recon_loss: 2477.488281, kl_loss: 281.361115
+Training time: 966.70 sec 
+test total loss: 2765.761230, recon loss : 2484.420898, kl loss : 281.341339
+Eval time: 159.12 sec
+--------------------Epoch 43--------------------
+Training total loss: 25056.226562, recon_loss: 2477.484863, kl_loss: 281.346283
+Training time: 969.89 sec 
+--------------------Epoch 44--------------------
+Training total loss: 25056.205078, recon_loss: 2477.481689, kl_loss: 281.343658
+Training time: 967.77 sec 
+--------------------Epoch 45--------------------
+Training total loss: 25056.128906, recon_loss: 2477.470703, kl_loss: 281.354523
+Training time: 968.83 sec 
+test total loss: 2765.757324, recon loss : 2484.392578, kl loss : 281.362640
+Eval time: 165.71 sec
+--------------------Epoch 46--------------------
+Training total loss: 25055.828125, recon_loss: 2477.440186, kl_loss: 281.346436
+Training time: 966.79 sec 
+--------------------Epoch 47--------------------
+Training total loss: 25055.855469, recon_loss: 2477.441406, kl_loss: 281.347595
+Training time: 965.76 sec 
+--------------------Epoch 48--------------------
+Training total loss: 25055.429688, recon_loss: 2477.408447, kl_loss: 281.356995
+Training time: 966.48 sec 
+test total loss: 2765.678467, recon loss : 2484.363525, kl loss : 281.318298
+Eval time: 162.00 sec
+--------------------Epoch 49--------------------
+Training total loss: 25055.574219, recon_loss: 2477.428223, kl_loss: 281.326752
+Training time: 965.81 sec 

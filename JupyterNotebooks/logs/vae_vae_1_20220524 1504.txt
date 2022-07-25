@@ -1,0 +1,12 @@
+--------------------Epoch 0--------------------
+--------------------Epoch 0--------------------
+Training total loss: 1220.003296, recon_loss: 121.549477, kl_loss: 4.507906
+Training time: 975.01 sec 
+test total loss: 125.365471, recon loss : 120.288109, kl loss : 5.077259
+Eval time: 189.02 sec
+--------------------Epoch 1--------------------
+Training total loss: 1192.804199, recon_loss: 118.947075, kl_loss: 3.331998
+Training time: 969.95 sec 
+--------------------Epoch 2--------------------
+Training total loss: 1179.199463, recon_loss: 117.707909, kl_loss: 2.118730
+Training time: 966.35 sec 

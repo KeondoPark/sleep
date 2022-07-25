@@ -107,14 +107,9 @@ def notch_filter(data, f0, Q, fs):
     return y
 
 
-save_signals_path = os.path.join(DATA_PATH,'signals_filtered')
+save_signals_path = os.path.join(DATA_PATH,'signals_filtered_uniScale')
 os.makedirs(save_signals_path, exist_ok=True)
 
-save_seq_path = os.path.join(DATA_PATH,'signals_seq')
-save_ann_seq_path = os.path.join(DATA_PATH,'annotations_seq')
-
-os.makedirs(save_seq_path, exist_ok=True)
-os.makedirs(save_ann_seq_path, exist_ok=True)
 def filter_signal(file_list, in_folder, output_folder):
     for signal_file in tqdm(file_list):
         data = np.load(os.path.join(in_folder, signal_file))
@@ -144,7 +139,8 @@ def filter_signal(file_list, in_folder, output_folder):
             
             ### NOrmalize...
             from sklearn.preprocessing import scale
-            filtered_epoch = scale(filtered_epoch)
+            #filtered_epoch = scale(filtered_epoch)
+            filtered_epoch = filtered_epoch/35/1e-6 # Uniform scaling by 35
             
             filtered_signal.append(filtered_epoch)
 
@@ -153,8 +149,15 @@ def filter_signal(file_list, in_folder, output_folder):
         np.save(os.path.join(output_folder, signal_file), filtered_signal)
         
         
-#filter_signal(npy_files, data_folder, save_signals_path)
+filter_signal(npy_files, data_folder, save_signals_path)
 
+
+
+save_seq_path = os.path.join(DATA_PATH,'signals_seq')
+save_ann_seq_path = os.path.join(DATA_PATH,'annotations_seq')
+
+os.makedirs(save_seq_path, exist_ok=True)
+os.makedirs(save_ann_seq_path, exist_ok=True)
 
 def convert_to_seq(file_list, in_folder, output_folder, ann_folder, ann_out_folder):
     
@@ -176,4 +179,4 @@ def convert_to_seq(file_list, in_folder, output_folder, ann_folder, ann_out_fold
         np.save(os.path.join(ann_out_folder, ann_file_name[0]), seq_ann_data)
         
 npy_signals = search_signals_npy(save_signals_path)
-convert_to_seq(npy_signals, save_signals_path, save_seq_path, ann_folder, save_ann_seq_path)
+# convert_to_seq(npy_signals, save_signals_path, save_seq_path, ann_folder, save_ann_seq_path)
